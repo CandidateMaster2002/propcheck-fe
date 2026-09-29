@@ -250,6 +250,7 @@ export default function AdminDashboard() {
             <button className="btn btn-secondary" onClick={() => navigate('/schedule')}>🗓️ Schedule</button>
             <button className="btn btn-secondary" onClick={() => navigate('/analytics')}>📊 Analytics</button>
             <button className="btn btn-secondary" onClick={() => navigate('/profile')}>Profile</button>
+            <button className="btn btn-secondary" onClick={handleLogout} style={{ border: '1px solid var(--error-color)', color: 'var(--error-color)' }}>Logout</button>
           </div>
         </header>
 
