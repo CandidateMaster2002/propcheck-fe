@@ -14,7 +14,7 @@ export default function SalesDashboard() {
   const navigate = useNavigate();
 
   const [leads, setLeads] = useState([]);
-  const [cityFilter, setCityFilter] = useState(city || 'All');
+  const [cityFilter, setCityFilter] = useState(city || '');
   const [ownerFilter, setOwnerFilter] = useState('All');
   const [allUsers, setAllUsers] = useState([]);
   const salesUsers = allUsers.filter(u => u.role === 'SALES');
@@ -54,7 +54,7 @@ export default function SalesDashboard() {
     setLoadingLeads(true);
     try {
       const params = new URLSearchParams();
-      if (cFilter !== 'All') params.append('city', cFilter);
+      if (cFilter) params.append('city', cFilter);
       if (search) params.append('search', search);
       params.append('bookingFilter', bFilter);
       if (oFilter !== 'All') params.append('owner', oFilter);
@@ -216,7 +216,7 @@ export default function SalesDashboard() {
                 onChange={(e) => setCityFilter(e.target.value)}
                 style={{ padding: '0.6rem', borderRadius: '0.5rem', border: '1px solid var(--border-color)' }}
               >
-                <option value="All">All</option>
+                <option value="">All</option>
                 <option value="Hyderabad">Hyderabad</option>
                 <option value="Bangalore">Bangalore</option>
                 <option value="Pune">Pune</option>

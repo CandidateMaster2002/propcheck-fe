@@ -48,11 +48,11 @@ export default function CityHeadDashboard() {
   }, [searchQuery]);
 
   const fetchLeads = useCallback(async () => {
-    if (!selectedCity) return;
     setLoadingLeads(true);
     try {
       const params = new URLSearchParams();
-      params.append('city', selectedCity);
+      // Only append city if selectedCity is not empty ("All")
+      if (selectedCity) params.append('city', selectedCity);
       if (debouncedSearch) params.append('search', debouncedSearch);
       params.append('bookingFilter', bookingFilter);
       if (ownerFilter !== 'All') params.append('owner', ownerFilter);
@@ -187,6 +187,7 @@ export default function CityHeadDashboard() {
                 onChange={(e) => setSelectedCity(e.target.value)}
                 style={{ padding: '0.6rem', borderRadius: '0.5rem', border: '1px solid var(--border-color)' }}
               >
+                <option value="">All</option>
                 <option value="Hyderabad">Hyderabad</option>
                 <option value="Bangalore">Bangalore</option>
                 <option value="Pune">Pune</option>
@@ -234,7 +235,7 @@ export default function CityHeadDashboard() {
             leads={leads}
             users={allUsers}
             loading={loadingLeads} 
-            emptyMessage={`No leads found for ${selectedCity}.`}
+            emptyMessage={`No leads found for ${selectedCity || 'All Cities'}.`}
             onBookClick={(lead) => setBookingLeadTarget(lead)}
             onAction={handleLeadAction}
             onRowClick={(id) => navigate('/leads/' + id)}

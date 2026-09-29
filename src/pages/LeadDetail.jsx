@@ -152,6 +152,9 @@ export default function LeadDetail() {
             <p style={{ color: 'var(--text-muted)', fontSize: '1rem', margin: 0 }}>
               {lead.phone || '—'} &nbsp;|&nbsp; {lead.email || '—'} &nbsp;|&nbsp; {lead.city || '—'}
             </p>
+            <p style={{ color: 'var(--text-muted)', fontSize: '0.875rem', marginTop: '0.5rem', fontWeight: 500 }}>
+              Lead Owner: {lead.leadOwner || 'Unassigned'}
+            </p>
           </div>
           <div style={{ marginTop: '2.5rem', display: 'flex', gap: '0.75rem', alignItems: 'center', flexWrap: 'wrap' }}>
             {lead.zohoLeadId && (
