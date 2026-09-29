@@ -12,12 +12,15 @@ import AnalyticsDashboard from './pages/AnalyticsDashboard';
 import MasterSchedulePage from './pages/MasterSchedulePage';
 import CreateBookingPage from './pages/CreateBookingPage';
 import ProtectedRoute from './components/ProtectedRoute';
+import DevApiToggle from './components/DevApiToggle';
 
 function App() {
   return (
-    <Routes>
-      <Route path="/login" element={<Login />} />
-      <Route path="/" element={<Navigate to="/login" replace />} />
+    <>
+      <DevApiToggle />
+      <Routes>
+        <Route path="/login" element={<Login />} />
+        <Route path="/" element={<Navigate to="/login" replace />} />
 
       <Route path="/admin" element={
         <ProtectedRoute allowedRole="ADMIN"><AdminDashboard /></ProtectedRoute>
@@ -63,6 +66,7 @@ function App() {
         </ProtectedRoute>
       } />
     </Routes>
+    </>
   );
 }
 
