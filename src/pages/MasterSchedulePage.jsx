@@ -140,7 +140,7 @@ export default function MasterSchedulePage() {
     const { status, label, bookingId } = slotInfo;
     let bg = '#ffffff'; let color = 'var(--text-main)'; let cursor = 'default'; let border = '1px solid var(--border-color)';
     
-    if (status === 'AVAILABLE') { bg = '#f3f4f6'; color = 'var(--text-muted)'; }
+    if (status === 'AVAILABLE') { bg = '#ffffff'; color = '#9ca3af'; border = '1px solid var(--border-color)'; }
     else if (status === 'LEAVE') { bg = '#fef08a'; color = '#854d0e'; border = '1px solid #fde047'; }
     else if (status === 'CONFIRMED') { bg = '#d1fae5'; color = '#065f46'; border = '1px solid #a7f3d0'; cursor = 'pointer'; }
     else if (status === 'CONFLICT') { bg = '#fee2e2'; color = '#991b1b'; border = '1px solid #fecaca'; cursor = 'pointer'; }
@@ -176,39 +176,61 @@ export default function MasterSchedulePage() {
           <button className="btn btn-secondary" onClick={() => navigate(-1)}>← Back</button>
         </header>
 
-        {/* Filters */}
-        <div className="card" style={{ padding: '1.25rem', marginBottom: '1.5rem' }}>
-          <div style={{ display: 'flex', gap: '1rem', flexWrap: 'wrap', alignItems: 'flex-end' }}>
-            <div className="form-group" style={{ margin: 0, flex: '1 1 150px' }}>
-              <label style={{ fontSize: '0.8125rem' }}>Start Date</label>
-              <input type="date" value={startDate} onChange={e => setStartDate(e.target.value)} />
-            </div>
-            <div className="form-group" style={{ margin: 0, flex: '1 1 150px' }}>
-              <label style={{ fontSize: '0.8125rem' }}>End Date</label>
-              <input type="date" value={endDate} onChange={e => setEndDate(e.target.value)} />
-            </div>
-            <div className="form-group" style={{ margin: 0, flex: '1 1 160px' }}>
-              <label style={{ fontSize: '0.8125rem' }}>City</label>
-              <select 
-                className="select-input"
-                value={cityFilter} 
-                onChange={e => setCityFilter(e.target.value)}
-                disabled={role === 'CITY_HEAD'}
-              >
-                {CITIES.map(c => <option key={c} value={c}>{c}</option>)}
-              </select>
-            </div>
-            <div className="form-group" style={{ margin: 0, flex: '1 1 200px' }}>
-              <label style={{ fontSize: '0.8125rem' }}>Engineer</label>
-              <select className="select-input" value={engineerFilter} onChange={e => setEngineerFilter(e.target.value)}>
-                <option value="">All Engineers</option>
-                {uniqueEngineers.map(e => <option key={e.empNo} value={e.empNo}>{e.name}</option>)}
-              </select>
-            </div>
-            <button className="btn btn-secondary" onClick={fetchSchedule} disabled={loading} style={{ height: '42px' }}>
-              {loading ? 'Refreshing...' : 'Refresh'}
-            </button>
+        {/* Filters Panel */}
+        <div style={{ 
+          display: 'grid', 
+          gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', 
+          gap: '1rem', 
+          marginBottom: '1.5rem', 
+          background: 'var(--background-color, #f9fafb)', 
+          padding: '1.25rem', 
+          borderRadius: '0.5rem', 
+          border: '1px solid var(--border-color)',
+          alignItems: 'end'
+        }}>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '0.35rem' }}>
+            <label style={{ fontSize: '0.875rem', fontWeight: 500, color: 'var(--text-muted)' }}>Start Date</label>
+            <input 
+              type="date" 
+              value={startDate} 
+              onChange={e => setStartDate(e.target.value)} 
+              style={{ padding: '0.6rem', borderRadius: '0.5rem', border: '1px solid var(--border-color)', width: '100%', boxSizing: 'border-box' }} 
+            />
           </div>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '0.35rem' }}>
+            <label style={{ fontSize: '0.875rem', fontWeight: 500, color: 'var(--text-muted)' }}>End Date</label>
+            <input 
+              type="date" 
+              value={endDate} 
+              onChange={e => setEndDate(e.target.value)} 
+              style={{ padding: '0.6rem', borderRadius: '0.5rem', border: '1px solid var(--border-color)', width: '100%', boxSizing: 'border-box' }} 
+            />
+          </div>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '0.35rem' }}>
+            <label style={{ fontSize: '0.875rem', fontWeight: 500, color: 'var(--text-muted)' }}>City</label>
+            <select 
+              value={cityFilter} 
+              onChange={e => setCityFilter(e.target.value)} 
+              disabled={role === 'CITY_HEAD'}
+              style={{ padding: '0.6rem', borderRadius: '0.5rem', border: '1px solid var(--border-color)', width: '100%', boxSizing: 'border-box' }}
+            >
+              {CITIES.map(c => <option key={c} value={c}>{c}</option>)}
+            </select>
+          </div>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '0.35rem' }}>
+            <label style={{ fontSize: '0.875rem', fontWeight: 500, color: 'var(--text-muted)' }}>Engineer</label>
+            <select 
+              value={engineerFilter} 
+              onChange={e => setEngineerFilter(e.target.value)}
+              style={{ padding: '0.6rem', borderRadius: '0.5rem', border: '1px solid var(--border-color)', width: '100%', boxSizing: 'border-box' }}
+            >
+              <option value="">All Engineers</option>
+              {uniqueEngineers.map(e => <option key={e.empNo} value={e.empNo}>{e.name}</option>)}
+            </select>
+          </div>
+          <button className="btn btn-primary" onClick={fetchSchedule} disabled={loading} style={{ height: '42px', width: '100%' }}>
+            {loading ? 'Refreshing...' : 'Refresh'}
+          </button>
         </div>
 
         {/* Matrix Grid */}
@@ -223,12 +245,12 @@ export default function MasterSchedulePage() {
                 <thead style={{ position: 'sticky', top: 0, zIndex: 10, backgroundColor: 'white', boxShadow: '0 1px 3px rgba(0,0,0,0.1)' }}>
                   {/* Date Header Row */}
                   <tr>
-                    <th rowSpan={2} style={{ width: '220px', minWidth: '220px', backgroundColor: '#f9fafb', borderRight: '2px solid var(--border-color)', borderBottom: '2px solid var(--border-color)', zIndex: 11, left: 0, position: 'sticky' }}>
-                      Engineer Details
+                    <th rowSpan={2} style={{ width: '220px', minWidth: '220px', backgroundColor: '#f9fafb', borderRight: '2px solid var(--border-color)', borderBottom: '2px solid var(--border-color)', zIndex: 11, left: 0, position: 'sticky', fontSize: '0.75rem', fontWeight: 600, color: 'var(--text-muted)', letterSpacing: '0.05em' }}>
+                      ENGINEER DETAILS
                     </th>
                     {dateColumns.map(date => (
-                      <th key={date} colSpan={2} style={{ textAlign: 'center', borderBottom: '1px solid var(--border-color)', borderRight: '2px solid var(--border-color)', padding: '0.5rem', backgroundColor: '#f9fafb' }}>
-                        {new Date(date).toLocaleDateString('en-GB', { weekday: 'short', day: '2-digit', month: 'short' })}
+                      <th key={date} colSpan={2} style={{ textAlign: 'center', borderBottom: '1px solid var(--border-color)', borderRight: '2px solid var(--border-color)', padding: '0.75rem 0.5rem', backgroundColor: '#f9fafb', fontSize: '0.85rem', color: 'var(--text-main)' }}>
+                        {new Date(date).toLocaleDateString('en-GB', { weekday: 'short', day: '2-digit', month: 'short' }).toUpperCase()}
                       </th>
                     ))}
                   </tr>
@@ -236,11 +258,11 @@ export default function MasterSchedulePage() {
                   <tr>
                     {dateColumns.map(date => (
                       <React.Fragment key={`slots-${date}`}>
-                        <th style={{ textAlign: 'center', fontSize: '0.75rem', padding: '0.4rem', borderRight: '1px dotted var(--border-color)', borderBottom: '2px solid var(--border-color)', backgroundColor: '#fffbeb', color: '#92400e', width: '120px' }}>
-                          Mor
+                        <th style={{ textAlign: 'center', fontSize: '0.7rem', fontWeight: 600, padding: '0.5rem', borderRight: '1px solid var(--border-color)', borderBottom: '2px solid var(--border-color)', backgroundColor: '#fdfdfd', color: 'var(--text-muted)' }}>
+                          MOR
                         </th>
-                        <th style={{ textAlign: 'center', fontSize: '0.75rem', padding: '0.4rem', borderRight: '2px solid var(--border-color)', borderBottom: '2px solid var(--border-color)', backgroundColor: '#eff6ff', color: '#1e3a8a', width: '120px' }}>
-                          Eve
+                        <th style={{ textAlign: 'center', fontSize: '0.7rem', fontWeight: 600, padding: '0.5rem', borderRight: '2px solid var(--border-color)', borderBottom: '2px solid var(--border-color)', backgroundColor: '#fdfdfd', color: 'var(--text-muted)' }}>
+                          EVE
                         </th>
                       </React.Fragment>
                     ))}
