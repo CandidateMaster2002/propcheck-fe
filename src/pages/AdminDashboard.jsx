@@ -164,7 +164,7 @@ function CreateCityHeadForm({ onSuccess }) {
   );
 }
 
-function UsersTable({ users, onRefresh, loading }) {
+function UsersTable({ users, onRefresh, loading, onEdit, onDelete }) {
   return (
     <div className="card">
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
@@ -187,6 +187,7 @@ function UsersTable({ users, onRefresh, loading }) {
                 <th>Email</th>
                 <th>Role</th>
                 <th>City</th>
+                <th>Actions</th>
               </tr>
             </thead>
             <tbody>
@@ -200,6 +201,22 @@ function UsersTable({ users, onRefresh, loading }) {
                     </span>
                   </td>
                   <td>{user.city ?? '-'}</td>
+                  <td>
+                    <button 
+                      className="btn btn-secondary" 
+                      onClick={() => onEdit(user)}
+                      style={{ padding: '0.2rem 0.5rem', fontSize: '0.75rem', marginRight: '0.5rem' }}
+                    >
+                      Edit
+                    </button>
+                    <button 
+                      className="btn btn-primary" 
+                      onClick={() => onDelete(user.id)}
+                      style={{ padding: '0.2rem 0.5rem', fontSize: '0.75rem', background: 'var(--error-color)', borderColor: 'var(--error-color)' }}
+                    >
+                      Delete
+                    </button>
+                  </td>
                 </tr>
               ))}
             </tbody>
@@ -210,12 +227,15 @@ function UsersTable({ users, onRefresh, loading }) {
   );
 }
 
+import EditUserModal from '../components/EditUserModal';
+
 export default function AdminDashboard() {
   const { logout } = useAuth();
   const navigate = useNavigate();
 
   const [users, setUsers] = useState([]);
   const [tableLoading, setTableLoading] = useState(false);
+  const [editingUser, setEditingUser] = useState(null);
 
   const fetchUsers = useCallback(async () => {
     setTableLoading(true);
@@ -236,6 +256,17 @@ export default function AdminDashboard() {
   const handleLogout = () => {
     logout();
     navigate('/login');
+  };
+
+  const handleDeleteUser = async (id) => {
+    if (!window.confirm('Are you sure you want to delete this user?')) return;
+    
+    try {
+      await client.delete(`/users/${id}`);
+      fetchUsers();
+    } catch (err) {
+      alert(err.response?.data?.error || 'Failed to delete user.');
+    }
   };
 
   return (
@@ -259,7 +290,21 @@ export default function AdminDashboard() {
           <CreateCityHeadForm onSuccess={fetchUsers} />
         </div>
 
-        <UsersTable users={users} onRefresh={fetchUsers} loading={tableLoading} />
+        <UsersTable 
+          users={users} 
+          onRefresh={fetchUsers} 
+          loading={tableLoading} 
+          onEdit={(u) => setEditingUser(u)}
+          onDelete={handleDeleteUser}
+        />
+        
+        {editingUser && (
+          <EditUserModal
+            user={editingUser}
+            onClose={() => setEditingUser(null)}
+            onSuccess={fetchUsers}
+          />
+        )}
       </div>
     </div>
   );
