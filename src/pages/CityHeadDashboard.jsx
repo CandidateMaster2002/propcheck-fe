@@ -107,7 +107,7 @@ export default function CityHeadDashboard() {
     // Direct API actions for simple state changes
     try {
       if (action === 'CANCEL') {
-        await client.put(`/bookings/${bookingId}/cancel`);
+        await client.put(`/bookings/for-lead/${lead.id}/cancel`);
       } else if (action === 'MARK_DONE') {
         await client.put(`/bookings/${bookingId}/mark-done`);
       } else if (action === 'MARK_VALIDATION_DONE') {
