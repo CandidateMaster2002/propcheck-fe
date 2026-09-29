@@ -149,10 +149,22 @@ export default function LeadsTable({ leads, users = [], loading, emptyMessage, o
   return (
     <div>
       {/* Controls: Filter and Column Selector */}
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: '1rem', marginBottom: '1rem' }}>
+      <div style={{ 
+        display: 'flex', 
+        justifyContent: 'space-between', 
+        alignItems: 'center', 
+        flexWrap: 'wrap', 
+        gap: '1rem', 
+        marginBottom: '1rem',
+        background: 'var(--background-color, #f9fafb)',
+        padding: '0.75rem 1.25rem',
+        borderRadius: '0.5rem',
+        border: '1px solid var(--border-color)'
+      }}>
         
         {/* Payment Status Filter Tabs */}
-        <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
+        <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap', alignItems: 'center' }}>
+          <span style={{ fontSize: '0.875rem', fontWeight: 500, color: 'var(--text-muted)', marginRight: '0.5rem' }}>Payment Status:</span>
           {['All', 'Fully Paid', 'Partially Paid', 'Unpaid', 'Refunded'].map(status => (
             <button 
               key={status}

@@ -142,85 +142,91 @@ export default function CityHeadDashboard() {
         <ConflictWidget city={selectedCity} />
 
         <div className="card">
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem', flexWrap: 'wrap', gap: '1rem' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.25rem', flexWrap: 'wrap', gap: '1rem' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
               <h2 style={{ marginBottom: 0 }}>Leads</h2>
               <button className="btn btn-secondary" onClick={fetchLeads} disabled={loadingLeads} style={{ padding: '0.25rem 0.75rem', fontSize: '0.875rem' }}>
                 {loadingLeads ? '...' : 'Refresh'}
               </button>
             </div>
-            
-            <div style={{ display: 'flex', gap: '1rem', alignItems: 'center', flexWrap: 'wrap' }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                <label style={{ marginBottom: 0, fontWeight: 500 }}>City:</label>
-                <select
-                  value={selectedCity}
-                  onChange={(e) => setSelectedCity(e.target.value)}
-                  style={{
-                    padding: '0.5rem',
-                    borderRadius: '0.5rem',
-                    border: '1px solid var(--border-color)'
-                  }}
-                >
-                  <option value="Hyderabad">Hyderabad</option>
-                  <option value="Bangalore">Bangalore</option>
-                  <option value="Pune">Pune</option>
-                  <option value="Mumbai">Mumbai</option>
-                  <option value="Delhi NCR">Delhi NCR</option>
-                  <option value="Chennai">Chennai</option>
-                  <option value="Others">Others</option>
-                </select>
-              </div>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                <label style={{ marginBottom: 0, fontWeight: 500 }}>Lead Owner:</label>
-                <select
-                  value={ownerFilter}
-                  onChange={(e) => setOwnerFilter(e.target.value)}
-                  style={{
-                    padding: '0.5rem',
-                    borderRadius: '0.5rem',
-                    border: '1px solid var(--border-color)'
-                  }}
-                >
-                  <option value="All">All</option>
-                  {salesUsers.map(user => (
-                    <option key={user.id} value={user.name}>{user.name}</option>
-                  ))}
-                </select>
-              </div>
+          </div>
+          
+          {/* Dashboard Filters Panel */}
+          <div style={{ 
+            display: 'grid', 
+            gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', 
+            gap: '1rem', 
+            marginBottom: '1rem', 
+            background: 'var(--background-color, #f9fafb)', 
+            padding: '1.25rem', 
+            borderRadius: '0.5rem', 
+            border: '1px solid var(--border-color)' 
+          }}>
+            {/* Search - Full Width */}
+            <div style={{ gridColumn: '1 / -1' }}>
               <input
                 type="text"
                 placeholder="Search by name, email, or phone..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 style={{
-                  padding: '0.5rem 1rem',
+                  width: '100%',
+                  padding: '0.75rem 1rem',
                   borderRadius: '0.5rem',
                   border: '1px solid var(--border-color)',
-                  minWidth: '250px'
+                  boxSizing: 'border-box'
                 }}
               />
-              <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                <label style={{ marginBottom: 0, fontWeight: 500 }}>Booking Status:</label>
-                <select
-                  value={bookingFilter}
-                  onChange={(e) => setBookingFilter(e.target.value)}
-                  style={{
-                    padding: '0.5rem',
-                    borderRadius: '0.5rem',
-                    border: '1px solid var(--border-color)'
-                  }}
-                >
-                  <option value="ALL">All Leads</option>
-                  <option value="UNBOOKED">Unbooked (Never booked)</option>
-                  <option value="PENDING_ENGINEER">Date Allotted (Engineer Not Allotted)</option>
-                  <option value="ENGINEER_ALLOTTED">Engineer Allotted</option>
-                  <option value="INSPECTION_DONE">Inspection Done</option>
-                  <option value="VALIDATION_DONE">Validation Done</option>
-                  <option value="REPORT_SENT">Report Sent</option>
-                  <option value="POSTPONED_CANCELLED">Postponed / Cancelled</option>
-                </select>
-              </div>
+            </div>
+
+            {/* Dropdowns */}
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.35rem' }}>
+              <label style={{ fontSize: '0.875rem', fontWeight: 500, color: 'var(--text-muted)' }}>City</label>
+              <select
+                value={selectedCity}
+                onChange={(e) => setSelectedCity(e.target.value)}
+                style={{ padding: '0.6rem', borderRadius: '0.5rem', border: '1px solid var(--border-color)' }}
+              >
+                <option value="Hyderabad">Hyderabad</option>
+                <option value="Bangalore">Bangalore</option>
+                <option value="Pune">Pune</option>
+                <option value="Mumbai">Mumbai</option>
+                <option value="Delhi NCR">Delhi NCR</option>
+                <option value="Chennai">Chennai</option>
+                <option value="Others">Others</option>
+              </select>
+            </div>
+            
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.35rem' }}>
+              <label style={{ fontSize: '0.875rem', fontWeight: 500, color: 'var(--text-muted)' }}>Lead Owner</label>
+              <select
+                value={ownerFilter}
+                onChange={(e) => setOwnerFilter(e.target.value)}
+                style={{ padding: '0.6rem', borderRadius: '0.5rem', border: '1px solid var(--border-color)' }}
+              >
+                <option value="All">All</option>
+                {salesUsers.map(user => (
+                  <option key={user.id} value={user.name}>{user.name}</option>
+                ))}
+              </select>
+            </div>
+
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.35rem' }}>
+              <label style={{ fontSize: '0.875rem', fontWeight: 500, color: 'var(--text-muted)' }}>Booking Status</label>
+              <select
+                value={bookingFilter}
+                onChange={(e) => setBookingFilter(e.target.value)}
+                style={{ padding: '0.6rem', borderRadius: '0.5rem', border: '1px solid var(--border-color)' }}
+              >
+                <option value="ALL">All Leads</option>
+                <option value="UNBOOKED">Unbooked (Never booked)</option>
+                <option value="PENDING_ENGINEER">Date Allotted (Engineer Not Allotted)</option>
+                <option value="ENGINEER_ALLOTTED">Engineer Allotted</option>
+                <option value="INSPECTION_DONE">Inspection Done</option>
+                <option value="VALIDATION_DONE">Validation Done</option>
+                <option value="REPORT_SENT">Report Sent</option>
+                <option value="POSTPONED_CANCELLED">Postponed / Cancelled</option>
+              </select>
             </div>
           </div>
 

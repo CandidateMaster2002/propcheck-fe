@@ -155,8 +155,10 @@ export default function SalesDashboard() {
 
         <ConflictWidget />
 
-        <div className="card" style={{ marginBottom: '2rem' }}>
-          <div style={{ display: 'flex', gap: '1rem', alignItems: 'flex-start', flexWrap: 'wrap' }}>
+        <div className="card">
+          <div style={{ display: 'flex', flexWrap: 'wrap', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.25rem', gap: '1rem' }}>
+            <h2 style={{ marginBottom: 0 }}>Leads</h2>
+            
             <div>
               <button 
                 className="btn btn-primary" 
@@ -166,29 +168,53 @@ export default function SalesDashboard() {
                 {syncing ? 'Syncing...' : 'Sync from Zoho'}
               </button>
               {syncMessage && (
-                <div style={{ marginTop: '0.5rem', color: 'var(--success-color)', fontSize: '0.875rem' }}>
+                <div style={{ marginTop: '0.25rem', color: 'var(--success-color)', fontSize: '0.75rem', position: 'absolute' }}>
                   {syncMessage}
                 </div>
               )}
               {syncError && (
-                <div style={{ marginTop: '0.5rem', color: 'var(--error-color)', fontSize: '0.875rem' }}>
+                <div style={{ marginTop: '0.25rem', color: 'var(--error-color)', fontSize: '0.75rem', position: 'absolute' }}>
                   {syncError}
                 </div>
               )}
             </div>
-
-            <div style={{ marginLeft: 'auto', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-              <label htmlFor="city-filter" style={{ marginBottom: 0 }}>Filter by City:</label>
-              <select 
-                id="city-filter"
-                value={cityFilter}
-                onChange={(e) => setCityFilter(e.target.value)}
+          </div>
+          
+          {/* Dashboard Filters Panel */}
+          <div style={{ 
+            display: 'grid', 
+            gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', 
+            gap: '1rem', 
+            marginBottom: '1rem', 
+            background: 'var(--background-color, #f9fafb)', 
+            padding: '1.25rem', 
+            borderRadius: '0.5rem', 
+            border: '1px solid var(--border-color)' 
+          }}>
+            {/* Search - Full Width */}
+            <div style={{ gridColumn: '1 / -1' }}>
+              <input
+                type="text"
+                placeholder="Search by name, email, or phone..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
                 style={{
-                  padding: '0.5rem',
+                  width: '100%',
+                  padding: '0.75rem 1rem',
                   borderRadius: '0.5rem',
                   border: '1px solid var(--border-color)',
-                  fontFamily: 'inherit'
+                  boxSizing: 'border-box'
                 }}
+              />
+            </div>
+
+            {/* Dropdowns */}
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.35rem' }}>
+              <label style={{ fontSize: '0.875rem', fontWeight: 500, color: 'var(--text-muted)' }}>City</label>
+              <select
+                value={cityFilter}
+                onChange={(e) => setCityFilter(e.target.value)}
+                style={{ padding: '0.6rem', borderRadius: '0.5rem', border: '1px solid var(--border-color)' }}
               >
                 <option value="All">All</option>
                 <option value="Hyderabad">Hyderabad</option>
@@ -201,18 +227,12 @@ export default function SalesDashboard() {
               </select>
             </div>
             
-            <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-              <label htmlFor="owner-filter" style={{ marginBottom: 0 }}>Lead Owner:</label>
-              <select 
-                id="owner-filter"
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.35rem' }}>
+              <label style={{ fontSize: '0.875rem', fontWeight: 500, color: 'var(--text-muted)' }}>Lead Owner</label>
+              <select
                 value={ownerFilter}
                 onChange={(e) => setOwnerFilter(e.target.value)}
-                style={{
-                  padding: '0.5rem',
-                  borderRadius: '0.5rem',
-                  border: '1px solid var(--border-color)',
-                  fontFamily: 'inherit'
-                }}
+                style={{ padding: '0.6rem', borderRadius: '0.5rem', border: '1px solid var(--border-color)' }}
               >
                 <option value="All">All</option>
                 {salesUsers.map(user => (
@@ -220,47 +240,23 @@ export default function SalesDashboard() {
                 ))}
               </select>
             </div>
-          </div>
-        </div>
 
-        <div className="card">
-          <div style={{ display: 'flex', flexWrap: 'wrap', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem', gap: '1rem' }}>
-            <h2 style={{ marginBottom: 0 }}>Leads</h2>
-            
-            <div style={{ display: 'flex', gap: '1rem', alignItems: 'center', flexWrap: 'wrap' }}>
-              <input
-                type="text"
-                placeholder="Search by name, email, or phone..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                style={{
-                  padding: '0.5rem 1rem',
-                  borderRadius: '0.5rem',
-                  border: '1px solid var(--border-color)',
-                  minWidth: '250px'
-                }}
-              />
-              <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                <label style={{ marginBottom: 0, fontWeight: 500 }}>Booking Status:</label>
-                <select
-                  value={bookingFilter}
-                  onChange={(e) => setBookingFilter(e.target.value)}
-                  style={{
-                    padding: '0.5rem',
-                    borderRadius: '0.5rem',
-                    border: '1px solid var(--border-color)'
-                  }}
-                >
-                  <option value="ALL">All Leads</option>
-                  <option value="UNBOOKED">Unbooked (Never booked)</option>
-                  <option value="PENDING_ENGINEER">Date Allotted (Engineer Not Allotted)</option>
-                  <option value="ENGINEER_ALLOTTED">Engineer Allotted</option>
-                  <option value="INSPECTION_DONE">Inspection Done</option>
-                  <option value="VALIDATION_DONE">Validation Done</option>
-                  <option value="REPORT_SENT">Report Sent</option>
-                  <option value="POSTPONED_CANCELLED">Postponed / Cancelled</option>
-                </select>
-              </div>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.35rem' }}>
+              <label style={{ fontSize: '0.875rem', fontWeight: 500, color: 'var(--text-muted)' }}>Booking Status</label>
+              <select
+                value={bookingFilter}
+                onChange={(e) => setBookingFilter(e.target.value)}
+                style={{ padding: '0.6rem', borderRadius: '0.5rem', border: '1px solid var(--border-color)' }}
+              >
+                <option value="ALL">All Leads</option>
+                <option value="UNBOOKED">Unbooked (Never booked)</option>
+                <option value="PENDING_ENGINEER">Date Allotted (Engineer Not Allotted)</option>
+                <option value="ENGINEER_ALLOTTED">Engineer Allotted</option>
+                <option value="INSPECTION_DONE">Inspection Done</option>
+                <option value="VALIDATION_DONE">Validation Done</option>
+                <option value="REPORT_SENT">Report Sent</option>
+                <option value="POSTPONED_CANCELLED">Postponed / Cancelled</option>
+              </select>
             </div>
           </div>
 
