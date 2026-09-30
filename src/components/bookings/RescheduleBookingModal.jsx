@@ -74,7 +74,8 @@ export default function RescheduleBookingModal({ booking, onClose, onSuccess }) 
       onSuccess();
       onClose();
     } catch (err) {
-      showToast(err.response?.data?.error || 'Failed to reschedule booking', 'error');
+      const errorMsg = err.response?.data?.error || err.response?.data?.message || 'Something went wrong';
+      showToast(errorMsg, 'error');
     } finally {
       setSubmitting(false);
     }

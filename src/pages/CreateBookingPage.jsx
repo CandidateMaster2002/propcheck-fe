@@ -134,7 +134,8 @@ export default function CreateBookingPage() {
       showToast('Booking created successfully ✅', 'success');
       navigate(-1);
     } catch (err) {
-      showToast(err.response?.data?.error || 'Failed to create booking', 'error');
+      const errorMsg = err.response?.data?.error || err.response?.data?.message || 'Something went wrong';
+      showToast(errorMsg, 'error');
     } finally {
       setSubmitting(false);
     }

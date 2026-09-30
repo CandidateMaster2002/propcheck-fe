@@ -48,7 +48,11 @@ export default function MyBookingsPage() {
     }
   }, [fetchBookings, email]);
 
-  const hasActiveBooking = bookings.some(b => !['CANCELLED'].includes(b.status));
+  // A booking is active if it's not CANCELLED and not POSTPONED_CANCELLED
+  const hasActiveBooking = bookings.some(b => !['CANCELLED', 'POSTPONED_CANCELLED'].includes(b.status));
+  
+  // Rule: Hide Book button entirely if Refunded OR Unpaid for Customer
+  const canCustomerBook = myLead && !hasActiveBooking && myLead.paymentStatus !== 'Unpaid' && myLead.paymentStatus !== 'Refunded';
 
   return (
     <div className="app-container">
@@ -60,7 +64,7 @@ export default function MyBookingsPage() {
           </div>
           <div style={{ display: 'flex', gap: '0.5rem' }}>
             <button className="btn btn-secondary" onClick={() => navigate('/customer')}>← Dashboard</button>
-            {!hasActiveBooking && myLead && (
+            {canCustomerBook && (
               <button className="btn btn-primary" onClick={() => setBookingLeadTarget(myLead)}>
                 + Book Inspection
               </button>
@@ -79,7 +83,7 @@ export default function MyBookingsPage() {
             <p style={{ color: 'var(--text-muted)', marginBottom: '1.5rem' }}>
               You haven't booked an inspection yet.
             </p>
-            {myLead && (
+            {canCustomerBook && (
               <button className="btn btn-primary" onClick={() => setBookingLeadTarget(myLead)}>
                 Book Your First Inspection
               </button>

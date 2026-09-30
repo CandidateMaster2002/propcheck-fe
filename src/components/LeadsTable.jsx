@@ -278,10 +278,12 @@ export default function LeadsTable({ leads, users = [], loading, emptyMessage, o
                             title="Actions"
                           >
                             <option value="" disabled>⚙️ ▾</option>
-                            {status === 'UNBOOKED' && <option value="BOOK">Book</option>}
+                            {(status === 'UNBOOKED' || status === 'POSTPONED_CANCELLED') && lead.paymentStatus !== 'Refunded' && (
+                              <option value="BOOK">Book</option>
+                            )}
                             {status === 'PENDING_ENGINEER_ASSIGNMENT' && (
                               <>
-                                <option value="RESCHEDULE">Change Date</option>
+                                {lead.paymentStatus !== 'Refunded' && <option value="RESCHEDULE">Change Date</option>}
                                 {role !== 'SALES' && <option value="ASSIGN_ENGINEER">Allot Engineer</option>}
                                 {role !== 'SALES' && <option value="CANCEL">Postpone / Cancel</option>}
                               </>
