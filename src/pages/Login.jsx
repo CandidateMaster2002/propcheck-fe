@@ -108,6 +108,14 @@ export default function Login() {
             <button 
               type="button" 
               className="btn btn-secondary" 
+              onClick={() => fillDemo('arnabnit@gmail.com', '123password')}
+              style={{ fontSize: '0.8125rem', padding: '0.5rem' }}
+            >
+              Customer (arnabnit)
+            </button>
+            <button 
+              type="button" 
+              className="btn btn-secondary" 
               onClick={() => fillDemo('admin@example.com', '123')}
               style={{ fontSize: '0.8125rem', padding: '0.5rem' }}
             >
