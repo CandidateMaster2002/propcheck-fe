@@ -301,13 +301,7 @@ export default function LeadsTable({ leads, users = [], loading, emptyMessage, o
                           >
                             <option value="" disabled style={{ color: '#6b7280' }}>⚙️ Actions</option>
                             {isUnbooked && lead.paymentStatus !== 'Refunded' && (
-                              role === 'SALES' && lead.paymentStatus !== 'Fully Paid' ? (
-                                <option value="" disabled style={{ color: '#991b1b' }} title="Only City Lead has permission to schedule inspections for partially paid leads.">
-                                  Book (City Lead Only)
-                                </option>
-                              ) : (
-                                <option value="BOOK" style={{ color: '#111827' }}>Book</option>
-                              )
+                              <option value="BOOK" style={{ color: '#111827' }}>Book</option>
                             )}
                             {status === 'POSTPONED' && lead.paymentStatus !== 'Refunded' && (
                               <option value="RESCHEDULE" style={{ color: '#111827' }}>Change Date</option>
