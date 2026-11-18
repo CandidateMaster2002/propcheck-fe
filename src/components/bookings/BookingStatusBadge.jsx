@@ -5,7 +5,12 @@ export const STATUS_CONFIG = {
   PENDING_ENGINEER_ASSIGNMENT: { label: 'Pending Assignment', bg: '#eff6ff', color: '#1d4ed8', border: '#bfdbfe' },
   CONFIRMED: { label: 'Confirmed', bg: '#ecfdf5', color: '#047857', border: '#a7f3d0' },
   CONFLICT: { label: '⚠️ Conflict', bg: '#fef2f2', color: '#991b1b', border: '#fecaca' },
+  POSTPONED: { label: 'Postponed', bg: '#fef3c7', color: '#b45309', border: '#fde68a' },
   CANCELLED: { label: 'Cancelled', bg: '#f3f4f6', color: '#374151', border: '#e5e7eb' },
+  COMPLETED: { label: 'Completed', bg: '#d1fae5', color: '#065f46', border: '#6ee7b7' },
+  INSPECTION_DONE: { label: 'Inspection Done', bg: '#d1fae5', color: '#065f46', border: '#6ee7b7' },
+  APPROVED: { label: '✓ Approved', bg: '#dbeafe', color: '#1e40af', border: '#93c5fd' },
+  REJECTED: { label: '✕ Rejected', bg: '#fee2e2', color: '#991b1b', border: '#fca5a5' },
 };
 
 export const SLOT_CONFIG = {

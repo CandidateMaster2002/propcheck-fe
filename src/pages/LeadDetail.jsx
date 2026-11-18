@@ -24,11 +24,11 @@ const formatCurrency = (amount) => {
 };
 
 const PaymentBadge = ({ status }) => {
-  let bgColor = '#e0e7ff', color = '#3730a3';
-  if (status === 'Fully Paid') { bgColor = '#dcfce7'; color = '#166534'; }
-  else if (status === 'Partially Paid') { bgColor = '#fef08a'; color = '#854d0e'; }
-  else if (status === 'Unpaid') { bgColor = '#fee2e2'; color = '#991b1b'; }
-  else if (status === 'Refunded') { bgColor = '#f3f4f6'; color = '#374151'; }
+  let bgColor = '#e0e7ff', color = '#3730a3', label = status || '—';
+  if (status === 'Fully Paid') { bgColor = '#dcfce7'; color = '#166534'; label = 'Fully Paid'; }
+  else if (status === 'Partially Paid') { bgColor = '#fef08a'; color = '#854d0e'; label = 'Partially Paid'; }
+  else if (status === 'Unpaid' || status === 'Data Not Updated') { bgColor = '#fee2e2'; color = '#991b1b'; label = 'Data Not Updated'; }
+  else if (status === 'Refunded') { bgColor = '#f3f4f6'; color = '#374151'; label = 'Refunded'; }
   
   return (
     <span style={{ 
@@ -41,7 +41,7 @@ const PaymentBadge = ({ status }) => {
       whiteSpace: 'nowrap',
       display: 'inline-block'
     }}>
-      {status || '—'}
+      {label}
     </span>
   );
 };

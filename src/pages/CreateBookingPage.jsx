@@ -5,8 +5,8 @@ import { useToast } from '../context/ToastContext';
 import { useAuth } from '../context/AuthContext';
 
 const STANDARD_CITIES = ['Bangalore', 'Hyderabad', 'Delhi NCR', 'Mumbai', 'Pune'];
-const MORNING_TIMES = ['10:00', '10:30', '11:00', '11:30'];
-const EVENING_TIMES = ['14:00', '14:30', '15:00', '15:30', '16:00'];
+const MORNING_TIMES = ['09:30', '10:00', '10:30'];
+const EVENING_TIMES = ['13:30', '14:00', '14:30'];
 const REINSPECTION_ELIGIBLE_TYPES = [
   'Inspection+Re-Inspection',
   'Inspection+Re-Inspection+Interior',
@@ -332,7 +332,7 @@ export default function CreateBookingPage() {
                     fontWeight: slot === 'MORNING' ? 600 : 400
                   }}
                 >
-                  🌅 Morning <span style={{ fontWeight: 400, color: 'inherit', fontSize: '0.75rem', display: 'block' }}>10:00 - 11:30</span>
+                  🌅 Morning <span style={{ fontWeight: 400, color: 'inherit', fontSize: '0.75rem', display: 'block' }}>09:30 - 10:30</span>
                 </button>
                 <button
                   type="button"
@@ -346,7 +346,7 @@ export default function CreateBookingPage() {
                     fontWeight: slot === 'EVENING' ? 600 : 400
                   }}
                 >
-                  🌆 Evening <span style={{ fontWeight: 400, color: 'inherit', fontSize: '0.75rem', display: 'block' }}>14:00 - 16:00</span>
+                  🌆 Afternoon <span style={{ fontWeight: 400, color: 'inherit', fontSize: '0.75rem', display: 'block' }}>13:30 - 14:30</span>
                 </button>
               </div>
             </div>
@@ -377,7 +377,12 @@ export default function CreateBookingPage() {
 
             {/* Availability Checks & Alerts */}
             <div style={{ marginTop: '1.5rem' }}>
-              {isCustomer && (selectedLead?.paymentStatus === 'Partially Paid' || isNonStandard) && (
+              {selectedLead && selectedLead.paymentStatus !== 'Fully Paid' && role !== 'CITY_HEAD' && role !== 'CITY_LEAD' && role !== 'ADMIN' && (
+                <div className="alert alert-danger" style={{ marginTop: '1rem', fontSize: '0.875rem', backgroundColor: '#fee2e2', color: '#991b1b', border: '1px solid #f87171', padding: '0.75rem', borderRadius: '0.5rem' }}>
+                  ⛔ <strong>Scheduling Restricted:</strong> This lead has status <em>"{selectedLead.paymentStatus || 'Data Not Updated'}"</em>. Partially paid leads can only be scheduled by a <strong>City Lead</strong>.
+                </div>
+              )}
+              {isCustomer && (selectedLead?.paymentStatus === 'Fully Paid' && isNonStandard) && (
                 <div className="alert alert-warning" style={{ marginTop: '1rem', fontSize: '0.8125rem' }}>
                   ℹ️ Your booking will be reviewed and approved by our team before confirmation.
                 </div>
@@ -390,7 +395,7 @@ export default function CreateBookingPage() {
                 type="submit"
                 className="btn btn-primary"
                 style={{ width: '100%', padding: '1rem', fontSize: '1rem' }}
-                disabled={!isFormValid || submitting}
+                disabled={!isFormValid || submitting || (selectedLead?.paymentStatus !== 'Fully Paid' && role !== 'CITY_HEAD' && role !== 'CITY_LEAD' && role !== 'ADMIN')}
               >
                 {submitting ? 'Creating Booking...' : 'Confirm & Book Inspection'}
               </button>

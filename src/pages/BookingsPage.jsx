@@ -14,8 +14,15 @@ const STATUSES = [
   { value: 'PENDING_ENGINEER_ASSIGNMENT', label: 'Pending Assignment' },
   { value: 'CONFIRMED', label: 'Confirmed' },
   { value: 'CONFLICT', label: 'Conflict' },
+  { value: 'POSTPONED', label: 'Postponed' },
   { value: 'CANCELLED', label: 'Cancelled' },
 ];
+
+const getTomorrowDate = () => {
+  const d = new Date();
+  d.setDate(d.getDate() + 1);
+  return d.toISOString().split('T')[0];
+};
 
 export default function BookingsPage() {
   const { role, city: userCity, id: currentUserId } = useAuth();
@@ -27,17 +34,18 @@ export default function BookingsPage() {
   const [loading, setLoading] = useState(true);
   const [conflicts, setConflicts] = useState([]);
 
-  const [cityFilter, setCityFilter] = useState(
-    role === 'CITY_HEAD' ? (userCity || 'All') : 'All'
-  );
+  // City Lead can view all cities for now
+  const [cityFilter, setCityFilter] = useState('All');
   const [statusFilter, setStatusFilter] = useState(searchParams.get('status') || 'All');
-  const [dateFrom, setDateFrom] = useState('');
-  const [dateTo, setDateTo] = useState('');
+  // Default date filter to Tomorrow per client specification
+  const [dateFrom, setDateFrom] = useState(getTomorrowDate());
+  const [dateTo, setDateTo] = useState(getTomorrowDate());
 
   const [approveTarget, setApproveTarget] = useState(null);
   const [assignTarget, setAssignTarget] = useState(null);
   const [rescheduleTarget, setRescheduleTarget] = useState(null);
   const [cancellingId, setCancellingId] = useState(null);
+  const [postponingId, setPostponingId] = useState(null);
 
   const fetchBookings = useCallback(async () => {
     setLoading(true);
@@ -70,10 +78,15 @@ export default function BookingsPage() {
   useEffect(() => { fetchConflicts(); }, [fetchConflicts]);
 
   const handleCancel = async (id) => {
-    if (!window.confirm('Are you sure you want to cancel this booking?')) return;
+    const reason = window.prompt('Please enter the cancellation reason:');
+    if (reason === null) return;
+    if (!reason.trim()) {
+      showToast('Cancellation reason is mandatory', 'error');
+      return;
+    }
     setCancellingId(id);
     try {
-      await client.put(`/bookings/${id}/cancel`);
+      await client.put(`/bookings/${id}/cancel?reason=${encodeURIComponent(reason.trim())}`);
       showToast('Booking cancelled', 'info');
       fetchBookings();
     } catch (err) {
@@ -83,7 +96,26 @@ export default function BookingsPage() {
     }
   };
 
-  const canCancel = (b) => b.status !== 'CONFIRMED' && b.status !== 'CANCELLED';
+  const handlePostpone = async (id) => {
+    const remark = window.prompt('Please enter the remark for postponing:');
+    if (remark === null) return;
+    if (!remark.trim()) {
+      showToast('Postpone remark is mandatory', 'error');
+      return;
+    }
+    setPostponingId(id);
+    try {
+      await client.put(`/bookings/${id}/postpone?remark=${encodeURIComponent(remark.trim())}&userId=${currentUserId || 1}`);
+      showToast('Booking postponed. Engineer slot released.', 'info');
+      fetchBookings();
+    } catch (err) {
+      showToast(err.response?.data?.error || 'Failed to postpone booking', 'error');
+    } finally {
+      setPostponingId(null);
+    }
+  };
+
+  const canCancelOrPostpone = (b) => b.status !== 'CANCELLED' && b.status !== 'POSTPONED';
 
   return (
     <div className="app-container">
@@ -127,7 +159,6 @@ export default function BookingsPage() {
               <select
                 value={cityFilter}
                 onChange={e => setCityFilter(e.target.value)}
-                disabled={role === 'CITY_HEAD'}
                 className="select-input"
               >
                 {CITIES.map(c => <option key={c} value={c}>{c}</option>)}
@@ -208,7 +239,7 @@ export default function BookingsPage() {
                               Approve
                             </button>
                           )}
-                          {role === 'CITY_HEAD' && (b.status === 'PENDING_ENGINEER_ASSIGNMENT' || b.status === 'CONFLICT') && (
+                          {(role === 'CITY_HEAD' || role === 'CITY_LEAD' || role === 'ADMIN') && (b.status === 'PENDING_ENGINEER_ASSIGNMENT' || b.status === 'CONFLICT') && (
                             <button
                               className="btn"
                               style={{ padding: '0.3rem 0.75rem', fontSize: '0.75rem', backgroundColor: '#eff6ff', color: '#1d4ed8' }}
@@ -217,20 +248,32 @@ export default function BookingsPage() {
                               Assign
                             </button>
                           )}
-                          {canCancel(b) && (
-                            <button
-                              className="btn"
-                              style={{ padding: '0.3rem 0.75rem', fontSize: '0.75rem', backgroundColor: '#fef2f2', color: '#991b1b' }}
-                              onClick={() => handleCancel(b.id)}
-                              disabled={cancellingId === b.id}
-                            >
-                              {cancellingId === b.id ? '…' : 'Cancel'}
-                            </button>
+                          {canCancelOrPostpone(b) && (
+                            <>
+                              <button
+                                className="btn"
+                                style={{ padding: '0.3rem 0.65rem', fontSize: '0.75rem', backgroundColor: '#fef3c7', color: '#92400e' }}
+                                onClick={() => handlePostpone(b.id)}
+                                disabled={postponingId === b.id}
+                                title="Postpone with remark"
+                              >
+                                {postponingId === b.id ? '…' : 'Postpone'}
+                              </button>
+                              <button
+                                className="btn"
+                                style={{ padding: '0.3rem 0.65rem', fontSize: '0.75rem', backgroundColor: '#fef2f2', color: '#991b1b' }}
+                                onClick={() => handleCancel(b.id)}
+                                disabled={cancellingId === b.id}
+                                title="Cancel with reason"
+                              >
+                                {cancellingId === b.id ? '…' : 'Cancel'}
+                              </button>
+                            </>
                           )}
-                          {b.status !== 'CANCELLED' && (
+                          {b.status !== 'CANCELLED' && b.status !== 'POSTPONED' && (
                             <button
                               className="btn"
-                              style={{ padding: '0.3rem 0.75rem', fontSize: '0.75rem', backgroundColor: '#fffbeb', color: '#92400e' }}
+                              style={{ padding: '0.3rem 0.75rem', fontSize: '0.75rem', backgroundColor: '#f3f4f6', color: '#374151' }}
                               onClick={() => setRescheduleTarget(b)}
                             >
                               Reschedule

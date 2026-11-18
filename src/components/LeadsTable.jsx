@@ -21,11 +21,11 @@ const formatCurrency = (amount) => {
 };
 
 const PaymentBadge = ({ status }) => {
-  let bgColor = '#e0e7ff', color = '#3730a3';
-  if (status === 'Fully Paid') { bgColor = '#dcfce7'; color = '#166534'; }
-  else if (status === 'Partially Paid') { bgColor = '#fef08a'; color = '#854d0e'; }
-  else if (status === 'Unpaid') { bgColor = '#fee2e2'; color = '#991b1b'; }
-  else if (status === 'Refunded') { bgColor = '#f3f4f6'; color = '#374151'; }
+  let bgColor = '#e0e7ff', color = '#3730a3', label = status || '-';
+  if (status === 'Fully Paid') { bgColor = '#dcfce7'; color = '#166534'; label = 'Fully Paid'; }
+  else if (status === 'Partially Paid') { bgColor = '#fef08a'; color = '#854d0e'; label = 'Partially Paid'; }
+  else if (status === 'Unpaid' || status === 'Data Not Updated') { bgColor = '#fee2e2'; color = '#991b1b'; label = 'Data Not Updated'; }
+  else if (status === 'Refunded') { bgColor = '#f3f4f6'; color = '#374151'; label = 'Refunded'; }
   
   return (
     <span style={{ 
@@ -38,7 +38,7 @@ const PaymentBadge = ({ status }) => {
       whiteSpace: 'nowrap',
       display: 'inline-block'
     }}>
-      {status || '-'}
+      {label}
     </span>
   );
 };
@@ -91,10 +91,10 @@ export default function LeadsTable({ leads, users = [], loading, emptyMessage, o
       case 'paymentStatus': 
         return <PaymentBadge status={lead.paymentStatus} />;
       case 'bookingStatus': {
-        const status = lead.currentBookingStatus || 'UNBOOKED';
-        let bg = '#f3f4f6', color = '#374151', text = 'Unbooked';
+        const status = lead.currentBookingStatus || 'NOT_SCHEDULED';
+        let bg = '#f3f4f6', color = '#374151', text = 'Not Scheduled';
         
-        if (status === 'UNBOOKED') { bg = '#f3f4f6'; color = '#374151'; text = 'Unbooked'; }
+        if (status === 'UNBOOKED' || status === 'NOT_SCHEDULED') { bg = '#f3f4f6'; color = '#374151'; text = 'Not Scheduled'; }
         else if (status === 'PENDING_APPROVAL') { bg = '#ffedd5'; color = '#c2410c'; text = 'Pending Approval'; }
         else if (status === 'PENDING_ENGINEER_ASSIGNMENT') { bg = '#fef08a'; color = '#854d0e'; text = 'Pending Engineer'; }
         else if (status === 'CONFIRMED') { bg = '#dcfce7'; color = '#166534'; text = 'Confirmed'; }
@@ -102,7 +102,8 @@ export default function LeadsTable({ leads, users = [], loading, emptyMessage, o
         else if (status === 'INSPECTION_DONE') { bg = '#dbeafe'; color = '#1e40af'; text = 'Inspection Done'; }
         else if (status === 'VALIDATION_DONE') { bg = '#ccfbf1'; color = '#0f766e'; text = 'Validation Done'; }
         else if (status === 'REPORT_SENT') { bg = '#f3e8ff'; color = '#6b21a8'; text = 'Report Sent'; }
-        else if (status === 'POSTPONED_CANCELLED' || status === 'CANCELLED') { bg = '#fee2e2'; color = '#991b1b'; text = 'Postponed / Cancelled'; }
+        else if (status === 'POSTPONED') { bg = '#fef3c7'; color = '#b45309'; text = 'Postponed'; }
+        else if (status === 'CANCELLED' || status === 'POSTPONED_CANCELLED') { bg = '#fee2e2'; color = '#991b1b'; text = 'Cancelled'; }
         else { bg = '#e0e7ff'; color = '#3730a3'; text = status.replace(/_/g, ' '); }
 
         return (

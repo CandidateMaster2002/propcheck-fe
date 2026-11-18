@@ -3,6 +3,57 @@ import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import client from '../api/client';
 
+function CreateValidatorForm({ onSuccess }) {
+  const [name, setName] = useState('');
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setLoading(true);
+    setError('');
+    try {
+      await client.post('/users/validator', { name, email, password });
+      setName('');
+      setEmail('');
+      setPassword('');
+      onSuccess();
+    } catch (err) {
+      setError(err.response?.data?.error || 'Failed to create validator.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <div className="card">
+      <h2>Create Validator</h2>
+      <form onSubmit={handleSubmit}>
+        <div className="form-group">
+          <label htmlFor="val-name">Name</label>
+          <input id="val-name" type="text" value={name} onChange={(e) => setName(e.target.value)} required placeholder="Validator Name" />
+        </div>
+        <div className="form-group">
+          <label htmlFor="val-email">Email</label>
+          <input id="val-email" type="email" value={email} onChange={(e) => setEmail(e.target.value)} required placeholder="validator@example.com" />
+        </div>
+        <div className="form-group">
+          <label htmlFor="val-password">Password</label>
+          <input id="val-password" type="password" value={password} onChange={(e) => setPassword(e.target.value)} required placeholder="••••••••" />
+        </div>
+        {error && (
+          <div className="alert alert-error" role="alert">{error}</div>
+        )}
+        <button type="submit" className="btn btn-primary" disabled={loading}>
+          {loading ? 'Creating...' : 'Create Validator'}
+        </button>
+      </form>
+    </div>
+  );
+}
+
 function CreateSalesForm({ onSuccess }) {
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
@@ -97,7 +148,7 @@ function CreateCityHeadForm({ onSuccess }) {
       setCity('');
       onSuccess();
     } catch (err) {
-      setError(err.response?.data?.error || 'Failed to create city head.');
+      setError(err.response?.data?.error || 'Failed to create city lead.');
     } finally {
       setLoading(false);
     }
@@ -105,7 +156,7 @@ function CreateCityHeadForm({ onSuccess }) {
 
   return (
     <div className="card">
-      <h2>Create City Head</h2>
+      <h2>Create City Lead</h2>
       <form onSubmit={handleSubmit}>
         <div className="form-group">
           <label htmlFor="ch-name">Name</label>
@@ -157,7 +208,7 @@ function CreateCityHeadForm({ onSuccess }) {
           </div>
         )}
         <button type="submit" className="btn btn-primary" disabled={loading}>
-          {loading ? 'Creating...' : 'Create City Head'}
+          {loading ? 'Creating...' : 'Create City Lead'}
         </button>
       </form>
     </div>
@@ -288,6 +339,7 @@ export default function AdminDashboard() {
         <div className="dashboard-grid">
           <CreateSalesForm onSuccess={fetchUsers} />
           <CreateCityHeadForm onSuccess={fetchUsers} />
+          <CreateValidatorForm onSuccess={fetchUsers} />
         </div>
 
         <UsersTable 

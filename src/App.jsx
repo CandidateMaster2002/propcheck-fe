@@ -4,6 +4,7 @@ import AdminDashboard from './pages/AdminDashboard';
 import SalesDashboard from './pages/SalesDashboard';
 import CityHeadDashboard from './pages/CityHeadDashboard';
 import CustomerDashboard from './pages/CustomerDashboard';
+import ValidatorDashboard from './pages/ValidatorDashboard';
 import Profile from './pages/Profile';
 import LeadDetail from './pages/LeadDetail';
 import BookingsPage from './pages/BookingsPage';
@@ -33,6 +34,9 @@ function App() {
       } />
       <Route path="/customer" element={
         <ProtectedRoute allowedRole="CUSTOMER"><CustomerDashboard /></ProtectedRoute>
+      } />
+      <Route path="/validator" element={
+        <ProtectedRoute allowedRole="VALIDATOR"><ValidatorDashboard /></ProtectedRoute>
       } />
 
       <Route path="/profile" element={

@@ -127,9 +127,9 @@ export default function CityHeadDashboard() {
       <div className="dashboard-container">
         <header className="dashboard-header">
           <div>
-            <h1 style={{ marginBottom: 0 }}>City Head Dashboard</h1>
+            <h1 style={{ marginBottom: 0 }}>City Lead Dashboard</h1>
             <p style={{ color: 'var(--text-muted)' }}>
-              Welcome back, {name || 'City Head'} | Managing: {city || 'Unassigned'}
+              Welcome back, {name || 'City Lead'} | Managing: {city || 'Unassigned'}
             </p>
           </div>
           <div style={{ display: 'flex', gap: '0.5rem' }}>

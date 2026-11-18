@@ -8,6 +8,7 @@ const ROLE_ROUTES = {
   SALES: '/sales',
   CITY_HEAD: '/cityhead',
   CUSTOMER: '/customer',
+  VALIDATOR: '/validator',
 };
 
 export default function Login() {
