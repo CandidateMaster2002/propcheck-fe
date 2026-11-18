@@ -3,6 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import client from '../api/client';
 import { useAuth } from '../context/AuthContext';
 import { useToast } from '../context/ToastContext';
+import InspectionReportView from '../components/reports/InspectionReportView';
 
 const formatDate = (isoString) => {
   if (!isoString) return '—';
@@ -88,6 +89,26 @@ export default function LeadDetail() {
   
   const [remarkInput, setRemarkInput] = useState('');
   const [savingRemark, setSavingRemark] = useState(false);
+  const [showReportModal, setShowReportModal] = useState(false);
+  const [sendingReport, setSendingReport] = useState(false);
+
+  const handleSendReport = async () => {
+    if (!window.confirm(`Send official inspection report to ${lead.customerName || 'customer'} via email and unlock on their portal?`)) return;
+    setSendingReport(true);
+    try {
+      try {
+        await client.put(`/bookings/for-lead/${id}/send-report`);
+      } catch {
+        await client.post(`/bookings/${lead.currentBookingId || id}/send-report`);
+      }
+      setLead(prev => ({ ...prev, currentBookingStatus: 'REPORT_SENT' }));
+      showToast('Report successfully sent to customer email & portal unlocked! ✅', 'success');
+    } catch (err) {
+      showToast(err.response?.data?.error || 'Failed to dispatch report', 'error');
+    } finally {
+      setSendingReport(false);
+    }
+  };
 
   useEffect(() => {
     const fetchLead = async () => {
@@ -225,6 +246,53 @@ export default function LeadDetail() {
           </div>
         </div>
 
+        {/* 2.5 Inspection Report & Validation Section */}
+        {['INSPECTION_DONE', 'VALIDATION_DONE', 'REPORT_SENT'].includes(lead.currentBookingStatus) && (
+          <div className="card" style={{ borderLeft: '4px solid #10b981', backgroundColor: '#f0fdf4' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '1rem', marginBottom: '1rem' }}>
+              <div>
+                <h2 style={{ margin: 0, fontSize: '1.25rem', color: '#065f46' }}>
+                  Inspection Report & Quality Audit
+                </h2>
+                <p style={{ margin: '0.25rem 0 0', fontSize: '0.875rem', color: '#047857' }}>
+                  Status: <strong>{lead.currentBookingStatus === 'REPORT_SENT' ? 'Report Sent (Customer Notified)' : lead.currentBookingStatus === 'VALIDATION_DONE' ? 'Validation Done (Ready to Send)' : 'Inspection Done (Pending QC Validation)'}</strong>
+                </p>
+              </div>
+              <div style={{ display: 'flex', gap: '0.75rem', flexWrap: 'wrap' }}>
+                <button
+                  type="button"
+                  className="btn btn-primary"
+                  onClick={() => setShowReportModal(true)}
+                  style={{ backgroundColor: '#059669', borderColor: '#059669' }}
+                >
+                  📋 View Inspection Report & Snags
+                </button>
+                {lead.currentBookingStatus === 'VALIDATION_DONE' && (
+                  <button
+                    type="button"
+                    className="btn btn-primary"
+                    disabled={sendingReport}
+                    onClick={handleSendReport}
+                    style={{ backgroundColor: '#2563eb', borderColor: '#2563eb' }}
+                  >
+                    {sendingReport ? 'Sending…' : '✉️ Send Report to Customer'}
+                  </button>
+                )}
+                {lead.currentBookingStatus === 'REPORT_SENT' && (
+                  <span style={{ padding: '0.5rem 1rem', borderRadius: '0.375rem', backgroundColor: '#dcfce7', color: '#166534', fontWeight: 600, fontSize: '0.875rem' }}>
+                    🔒 Report Sent to Customer
+                  </span>
+                )}
+              </div>
+            </div>
+            <div className="dashboard-grid" style={{ marginBottom: 0, gap: '1rem' }}>
+              <Field label="Inspector" value={lead.inspectionDoneBy || 'Lead Field Inspector'} />
+              <Field label="Validator" value={lead.validatorName || 'Quality Validator'} />
+              <Field label="Validation Notes" value={lead.validatorRemarks || 'Quality checks verified'} />
+            </div>
+          </div>
+        )}
+
         {/* 3. Payment & Invoice Details */}
         <div className="card">
           <h2 style={{ marginBottom: '1.5rem', fontSize: '1.25rem' }}>Payment & Invoice Details</h2>
@@ -280,6 +348,28 @@ export default function LeadDetail() {
         </div>
 
       </div>
+
+      {showReportModal && (
+        <div style={{
+          position: 'fixed',
+          inset: 0,
+          backgroundColor: 'rgba(15, 23, 42, 0.75)',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          zIndex: 1000,
+          padding: '1.5rem',
+          backdropFilter: 'blur(4px)'
+        }}>
+          <div style={{ width: '100%', maxWidth: '1100px', maxHeight: '92vh', overflowY: 'auto', borderRadius: '0.75rem' }}>
+            <InspectionReportView
+              booking={lead}
+              isValidator={role === 'VALIDATOR'}
+              onClose={() => setShowReportModal(false)}
+            />
+          </div>
+        </div>
+      )}
     </div>
   );
 }

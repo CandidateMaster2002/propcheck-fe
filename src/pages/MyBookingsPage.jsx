@@ -6,12 +6,16 @@ import client from '../api/client';
 import { BookingStatusBadge, SlotBadge, BookingTypeBadge } from '../components/bookings/BookingStatusBadge';
 import RescheduleBookingModal from '../components/bookings/RescheduleBookingModal';
 import CreateBookingModal from '../components/bookings/CreateBookingModal';
+import InspectionReportView from '../components/reports/InspectionReportView';
 
 const FRIENDLY_STATUS = {
   PENDING_APPROVAL: { label: 'Under Review', desc: 'Our team will confirm shortly.', color: '#c2410c', bg: '#fff7ed' },
   PENDING_ENGINEER_ASSIGNMENT: { label: 'Booking Confirmed!', desc: 'An engineer will be assigned to your inspection soon.', color: '#1d4ed8', bg: '#eff6ff' },
   CONFIRMED: { label: '✅ Confirmed', desc: null, color: '#047857', bg: '#ecfdf5' },
   CONFLICT: { label: '⚠️ Action Required', desc: 'There is an issue with your booking. Our team will contact you shortly.', color: '#991b1b', bg: '#fef2f2' },
+  INSPECTION_DONE: { label: '🔍 Inspection Completed', desc: 'Our engineer completed site inspection. Quality validation in progress.', color: '#b45309', bg: '#fef3c7' },
+  VALIDATION_DONE: { label: '✓ Quality Verified', desc: 'Report has been validated and will be shared with you shortly.', color: '#166534', bg: '#dcfce7' },
+  REPORT_SENT: { label: '📄 Report Ready', desc: 'Your comprehensive property inspection report is ready to view & download.', color: '#047857', bg: '#ecfdf5' },
   CANCELLED: { label: 'Cancelled', desc: null, color: '#374151', bg: '#f3f4f6' },
 };
 
@@ -25,6 +29,7 @@ export default function MyBookingsPage() {
   const [myLead, setMyLead] = useState(null);
   const [rescheduleTarget, setRescheduleTarget] = useState(null);
   const [bookingLeadTarget, setBookingLeadTarget] = useState(null);
+  const [selectedReportBooking, setSelectedReportBooking] = useState(null);
 
   const fetchBookings = useCallback(async () => {
     setLoading(true);
@@ -162,14 +167,25 @@ export default function MyBookingsPage() {
                   </div>
                   
                   {b.status !== 'CANCELLED' && (
-                    <div style={{ marginTop: '1rem', borderTop: '1px solid var(--border-color)', paddingTop: '1rem', display: 'flex', gap: '0.75rem' }}>
-                      <button 
-                        className="btn btn-secondary" 
-                        style={{ fontSize: '0.8125rem', padding: '0.4rem 1rem' }}
-                        onClick={() => setRescheduleTarget(b)}
-                      >
-                        Reschedule Booking
-                      </button>
+                    <div style={{ marginTop: '1rem', borderTop: '1px solid var(--border-color)', paddingTop: '1rem', display: 'flex', gap: '0.75rem', flexWrap: 'wrap' }}>
+                      {['INSPECTION_DONE', 'VALIDATION_DONE', 'REPORT_SENT'].includes(b.status) && (
+                        <button 
+                          className="btn btn-primary" 
+                          style={{ fontSize: '0.8125rem', padding: '0.45rem 1.1rem', backgroundColor: '#047857', borderColor: '#047857' }}
+                          onClick={() => setSelectedReportBooking(b)}
+                        >
+                          📋 View Inspection Report
+                        </button>
+                      )}
+                      {b.status !== 'REPORT_SENT' && (
+                        <button 
+                          className="btn btn-secondary" 
+                          style={{ fontSize: '0.8125rem', padding: '0.4rem 1rem' }}
+                          onClick={() => setRescheduleTarget(b)}
+                        >
+                          Reschedule Booking
+                        </button>
+                      )}
                     </div>
                   )}
                 </div>
@@ -192,6 +208,28 @@ export default function MyBookingsPage() {
           onClose={() => setBookingLeadTarget(null)}
           onSuccess={fetchBookings}
         />
+      )}
+
+      {selectedReportBooking && (
+        <div style={{
+          position: 'fixed',
+          inset: 0,
+          backgroundColor: 'rgba(15, 23, 42, 0.75)',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          zIndex: 1000,
+          padding: '1.5rem',
+          backdropFilter: 'blur(4px)'
+        }}>
+          <div style={{ width: '100%', maxWidth: '1100px', maxHeight: '92vh', overflowY: 'auto', borderRadius: '0.75rem' }}>
+            <InspectionReportView
+              booking={selectedReportBooking}
+              isValidator={false}
+              onClose={() => setSelectedReportBooking(null)}
+            />
+          </div>
+        </div>
       )}
     </div>
   );

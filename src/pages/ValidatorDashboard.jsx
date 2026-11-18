@@ -2,27 +2,33 @@ import { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import client from '../api/client';
+import InspectionReportView from '../components/reports/InspectionReportView';
 
 // Status colour map for bookings shown in validator queue
 const STATUS_COLORS = {
-  COMPLETED:  { background: '#d1fae5', color: '#065f46' },
-  APPROVED:   { background: '#dbeafe', color: '#1e40af' },
-  REJECTED:   { background: '#fee2e2', color: '#991b1b' },
-  DEFAULT:    { background: '#f3f4f6', color: '#374151' },
+  INSPECTION_DONE: { background: '#fef3c7', color: '#b45309', label: 'Inspection Done (Pending QC)' },
+  COMPLETED:       { background: '#fef3c7', color: '#b45309', label: 'Inspection Done' },
+  VALIDATION_DONE: { background: '#dcfce7', color: '#166534', label: 'Validation Done' },
+  APPROVED:        { background: '#dcfce7', color: '#166534', label: 'Approved' },
+  REPORT_SENT:     { background: '#f3e8ff', color: '#6b21a8', label: 'Report Sent' },
+  REJECTED:        { background: '#fee2e2', color: '#991b1b', label: 'Rework Required' },
+  DEFAULT:         { background: '#f3f4f6', color: '#374151', label: 'Pending' },
 };
 
 function StatusBadge({ status }) {
-  const style = STATUS_COLORS[status] || STATUS_COLORS.DEFAULT;
+  const meta = STATUS_COLORS[status] || STATUS_COLORS.DEFAULT;
   return (
     <span style={{
-      ...style,
-      padding: '2px 10px',
+      backgroundColor: meta.background,
+      color: meta.color,
+      padding: '4px 10px',
       borderRadius: 12,
       fontSize: 12,
       fontWeight: 600,
       display: 'inline-block',
+      whiteSpace: 'nowrap'
     }}>
-      {status}
+      {meta.label || status}
     </span>
   );
 }
@@ -33,12 +39,15 @@ export default function ValidatorDashboard() {
 
   const [bookings, setBookings] = useState([]);
   const [loading, setLoading] = useState(false);
-  const [actionLoading, setActionLoading] = useState(null); // bookingId being actioned
+  const [actionLoading, setActionLoading] = useState(null);
   const [error, setError] = useState('');
   const [successMsg, setSuccessMsg] = useState('');
 
-  // Filter: show all completed bookings pending validator review
-  const [filterStatus, setFilterStatus] = useState('COMPLETED');
+  // Selected booking for interactive inspection report modal
+  const [selectedReportBooking, setSelectedReportBooking] = useState(null);
+
+  // Filter: show inspections that are done and pending validator review by default
+  const [filterStatus, setFilterStatus] = useState('INSPECTION_DONE');
 
   const fetchBookings = useCallback(async () => {
     setLoading(true);
@@ -49,7 +58,12 @@ export default function ValidatorDashboard() {
         params.status = filterStatus;
       }
       const res = await client.get('/bookings', { params });
-      setBookings(res.data || []);
+      let data = res.data || [];
+      // If filtering for INSPECTION_DONE, also catch COMPLETED if backend uses that synonym
+      if (filterStatus === 'INSPECTION_DONE') {
+        data = data.filter(b => b.status === 'INSPECTION_DONE' || b.status === 'COMPLETED');
+      }
+      setBookings(data);
     } catch (err) {
       setError('Failed to load bookings. Please try again.');
       console.error(err);
@@ -62,37 +76,26 @@ export default function ValidatorDashboard() {
     fetchBookings();
   }, [fetchBookings]);
 
-  const handleApprove = async (bookingId) => {
-    if (!window.confirm('Approve this inspection report? It will be released to the customer.')) return;
+  // Handle validator approval verdict
+  const handleValidate = async (bookingId, remarks) => {
     setActionLoading(bookingId);
     setError('');
     try {
-      await client.post(`/bookings/${bookingId}/approve`);
-      setSuccessMsg(`Booking #${bookingId} approved successfully.`);
-      fetchBookings();
-    } catch (err) {
-      setError(err.response?.data?.error || `Failed to approve booking #${bookingId}.`);
-    } finally {
-      setActionLoading(null);
-    }
-  };
+      const booking = bookings.find(b => String(b.id) === String(bookingId)) || selectedReportBooking;
+      const leadId = booking?.leadId || bookingId;
 
-  const handleReject = async (bookingId) => {
-    const remarks = window.prompt('Enter rejection remarks (required):');
-    if (!remarks || !remarks.trim()) {
-      alert('Rejection remarks are required.');
-      return;
-    }
-    setActionLoading(bookingId);
-    setError('');
-    try {
-      await client.post(`/bookings/${bookingId}/reject`, null, {
-        params: { remarks: remarks.trim() },
-      });
-      setSuccessMsg(`Booking #${bookingId} rejected with remarks.`);
+      try {
+        await client.put(`/bookings/for-lead/${leadId}/mark-validation-done`, { remarks });
+      } catch (e) {
+        // Fallback endpoint if backend routes by bookingId
+        await client.post(`/bookings/${bookingId}/approve`, { remarks });
+      }
+
+      setSuccessMsg(`Booking #${bookingId} marked as Validation Done successfully. Ready for report dispatch.`);
+      setSelectedReportBooking(null);
       fetchBookings();
     } catch (err) {
-      setError(err.response?.data?.error || `Failed to reject booking #${bookingId}.`);
+      setError(err.response?.data?.error || err.response?.data?.message || `Failed to validate booking #${bookingId}.`);
     } finally {
       setActionLoading(null);
     }
@@ -106,9 +109,11 @@ export default function ValidatorDashboard() {
         display: 'flex', alignItems: 'center', justifyContent: 'space-between',
         padding: '0 24px', height: 56,
       }}>
-        <span style={{ fontWeight: 700, fontSize: 18 }}>PropCheck · Validator</span>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+          <span style={{ fontWeight: 700, fontSize: 18 }}>PropCheck · Quality Validator Portal</span>
+        </div>
         <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
-          <span style={{ fontSize: 14 }}>👤 {name}</span>
+          <span style={{ fontSize: 14 }}>👤 {name || 'Validator'}</span>
           <button
             onClick={logout}
             style={{
@@ -122,10 +127,10 @@ export default function ValidatorDashboard() {
         </div>
       </nav>
 
-      <div style={{ maxWidth: 1100, margin: '32px auto', padding: '0 16px' }}>
-        <h1 style={{ fontSize: 24, fontWeight: 700, marginBottom: 4 }}>Inspection Report Review</h1>
+      <div style={{ maxWidth: 1140, margin: '32px auto', padding: '0 16px' }}>
+        <h1 style={{ fontSize: 24, fontWeight: 700, marginBottom: 4 }}>Inspection Quality Review Queue</h1>
         <p style={{ color: '#6b7280', marginBottom: 24 }}>
-          Review completed inspections and approve or reject them before releasing to customers.
+          Inspect completed property reports, review snag evidence, and mark validation before report dispatch.
         </p>
 
         {/* ── Alerts ── */}
@@ -141,7 +146,7 @@ export default function ValidatorDashboard() {
           <div style={{
             background: '#d1fae5', border: '1px solid #6ee7b7', borderRadius: 8,
             padding: '12px 16px', marginBottom: 16, color: '#065f46',
-            display: 'flex', justifyContent: 'space-between',
+            display: 'flex', justifyContent: 'space-between', alignItems: 'center'
           }}>
             <span>{successMsg}</span>
             <button onClick={() => setSuccessMsg('')} style={{ background: 'none', border: 'none', cursor: 'pointer', fontWeight: 700 }}>✕</button>
@@ -152,22 +157,27 @@ export default function ValidatorDashboard() {
         <div style={{
           background: '#fff', border: '1px solid #e5e7eb', borderRadius: 10,
           padding: '16px 20px', marginBottom: 20,
-          display: 'flex', alignItems: 'center', gap: 16, flexWrap: 'wrap',
+          display: 'flex', alignItems: 'center', gap: 12, flexWrap: 'wrap',
         }}>
-          <label style={{ fontWeight: 600, fontSize: 14, color: '#374151' }}>Filter by Status:</label>
-          {['COMPLETED', 'APPROVED', 'REJECTED', 'ALL'].map(s => (
+          <label style={{ fontWeight: 600, fontSize: 14, color: '#374151' }}>Filter Status:</label>
+          {[
+            { value: 'INSPECTION_DONE', label: 'Pending Review (Inspection Done)' },
+            { value: 'VALIDATION_DONE', label: 'Validation Done' },
+            { value: 'REPORT_SENT', label: 'Report Sent to Customer' },
+            { value: 'ALL', label: 'All Inspections' },
+          ].map(s => (
             <button
-              key={s}
-              onClick={() => setFilterStatus(s)}
+              key={s.value}
+              onClick={() => setFilterStatus(s.value)}
               style={{
                 padding: '6px 14px', borderRadius: 20, border: '1.5px solid',
-                borderColor: filterStatus === s ? '#1d4ed8' : '#d1d5db',
-                background: filterStatus === s ? '#1d4ed8' : '#fff',
-                color: filterStatus === s ? '#fff' : '#374151',
+                borderColor: filterStatus === s.value ? '#1d4ed8' : '#d1d5db',
+                background: filterStatus === s.value ? '#1d4ed8' : '#fff',
+                color: filterStatus === s.value ? '#fff' : '#374151',
                 fontWeight: 600, fontSize: 13, cursor: 'pointer',
               }}
             >
-              {s}
+              {s.label}
             </button>
           ))}
           <button
@@ -179,26 +189,26 @@ export default function ValidatorDashboard() {
               cursor: 'pointer', fontWeight: 600, fontSize: 13,
             }}
           >
-            {loading ? 'Loading…' : '⟳ Refresh'}
+            {loading ? 'Loading…' : '⟳ Refresh Queue'}
           </button>
         </div>
 
         {/* ── Table ── */}
         {loading ? (
-          <div style={{ textAlign: 'center', padding: '48px 0', color: '#6b7280' }}>Loading bookings…</div>
+          <div style={{ textAlign: 'center', padding: '48px 0', color: '#6b7280' }}>Loading queue…</div>
         ) : bookings.length === 0 ? (
           <div style={{
             background: '#fff', border: '1px solid #e5e7eb', borderRadius: 10,
             padding: '48px 0', textAlign: 'center', color: '#6b7280',
           }}>
-            No bookings found with status <strong>{filterStatus}</strong>.
+            No inspections found with status <strong>{filterStatus}</strong>.
           </div>
         ) : (
           <div style={{ background: '#fff', border: '1px solid #e5e7eb', borderRadius: 10, overflow: 'hidden' }}>
             <table style={{ width: '100%', borderCollapse: 'collapse' }}>
               <thead>
                 <tr style={{ background: '#f9fafb', borderBottom: '1px solid #e5e7eb' }}>
-                  {['Booking ID', 'Lead / Property', 'Date', 'Time', 'Engineer', 'Type', 'Status', 'Actions'].map(h => (
+                  {['Booking / Lead', 'Customer & Property', 'City', 'Inspection Date', 'Engineer', 'Status', 'Actions'].map(h => (
                     <th key={h} style={{
                       padding: '12px 14px', textAlign: 'left',
                       fontSize: 12, fontWeight: 700, color: '#6b7280', textTransform: 'uppercase',
@@ -212,45 +222,34 @@ export default function ValidatorDashboard() {
                     key={bk.id}
                     style={{ borderBottom: '1px solid #e5e7eb', background: idx % 2 === 0 ? '#fff' : '#fafafa' }}
                   >
-                    <td style={{ padding: '12px 14px', fontWeight: 700, color: '#1d4ed8' }}>#{bk.id}</td>
-                    <td style={{ padding: '12px 14px' }}>
-                      <div style={{ fontWeight: 600 }}>{bk.leadName || bk.leadId}</div>
-                      <div style={{ fontSize: 12, color: '#6b7280' }}>{bk.propertyAddress || '—'}</div>
+                    <td style={{ padding: '12px 14px', fontWeight: 700, color: '#1d4ed8' }}>
+                      #{bk.id}
+                      <div style={{ fontSize: 11, color: '#6b7280', fontWeight: 400 }}>Lead #{bk.leadId}</div>
                     </td>
-                    <td style={{ padding: '12px 14px', fontSize: 13 }}>{bk.date || '—'}</td>
-                    <td style={{ padding: '12px 14px', fontSize: 13 }}>{bk.time || '—'}</td>
-                    <td style={{ padding: '12px 14px', fontSize: 13 }}>{bk.engineerName || '—'}</td>
-                    <td style={{ padding: '12px 14px', fontSize: 13 }}>{bk.type || '—'}</td>
+                    <td style={{ padding: '12px 14px' }}>
+                      <div style={{ fontWeight: 600 }}>{bk.customerName || bk.ownerName || `Lead #${bk.leadId}`}</div>
+                      <div style={{ fontSize: 12, color: '#6b7280' }}>{bk.flatNo || bk.propertyAddress || bk.inspectionType || 'Property Inspection'}</div>
+                    </td>
+                    <td style={{ padding: '12px 14px', fontSize: 13 }}>{bk.city || '—'}</td>
+                    <td style={{ padding: '12px 14px', fontSize: 13 }}>{bk.date || '—'} ({bk.slotTime || bk.slot || '—'})</td>
+                    <td style={{ padding: '12px 14px', fontSize: 13, color: '#0f172a', fontWeight: 500 }}>
+                      👷 {bk.engineerName || 'Assigned Engineer'}
+                    </td>
                     <td style={{ padding: '12px 14px' }}><StatusBadge status={bk.status} /></td>
                     <td style={{ padding: '12px 14px' }}>
-                      {bk.status === 'COMPLETED' ? (
-                        <div style={{ display: 'flex', gap: 8 }}>
-                          <button
-                            onClick={() => handleApprove(bk.id)}
-                            disabled={actionLoading === bk.id}
-                            style={{
-                              padding: '5px 12px', borderRadius: 6, border: 'none',
-                              background: '#10b981', color: '#fff',
-                              fontWeight: 600, fontSize: 12, cursor: 'pointer',
-                            }}
-                          >
-                            {actionLoading === bk.id ? '…' : '✓ Approve'}
-                          </button>
-                          <button
-                            onClick={() => handleReject(bk.id)}
-                            disabled={actionLoading === bk.id}
-                            style={{
-                              padding: '5px 12px', borderRadius: 6, border: 'none',
-                              background: '#ef4444', color: '#fff',
-                              fontWeight: 600, fontSize: 12, cursor: 'pointer',
-                            }}
-                          >
-                            {actionLoading === bk.id ? '…' : '✕ Reject'}
-                          </button>
-                        </div>
-                      ) : (
-                        <span style={{ color: '#9ca3af', fontSize: 12 }}>—</span>
-                      )}
+                      <div style={{ display: 'flex', gap: 8 }}>
+                        <button
+                          onClick={() => setSelectedReportBooking(bk)}
+                          style={{
+                            padding: '6px 14px', borderRadius: 6, border: '1px solid #2563eb',
+                            background: '#eff6ff', color: '#1d4ed8',
+                            fontWeight: 600, fontSize: 12, cursor: 'pointer',
+                            display: 'flex', alignItems: 'center', gap: 4
+                          }}
+                        >
+                          🔍 Review Report & Snags
+                        </button>
+                      </div>
                     </td>
                   </tr>
                 ))}
@@ -259,6 +258,31 @@ export default function ValidatorDashboard() {
           </div>
         )}
       </div>
+
+      {/* ── Interactive Inspection Report Modal ── */}
+      {selectedReportBooking && (
+        <div style={{
+          position: 'fixed',
+          inset: 0,
+          backgroundColor: 'rgba(15, 23, 42, 0.75)',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          zIndex: 1000,
+          padding: '1.5rem',
+          backdropFilter: 'blur(4px)'
+        }}>
+          <div style={{ width: '100%', maxWidth: '1100px', maxHeight: '92vh', overflowY: 'auto', borderRadius: '0.75rem' }}>
+            <InspectionReportView
+              booking={selectedReportBooking}
+              isValidator={true}
+              onClose={() => setSelectedReportBooking(null)}
+              onValidate={handleValidate}
+            />
+          </div>
+        </div>
+      )}
+
     </div>
   );
 }
