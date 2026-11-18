@@ -262,7 +262,15 @@ export default function LeadsTable({ leads, users = [], loading, emptyMessage, o
                           );
                         }
 
-                        const isUnbooked = !status || status === 'UNBOOKED' || status === 'NOT_SCHEDULED' || status === 'POSTPONED_CANCELLED' || status === 'CANCELLED';
+                        if (status === 'CANCELLED' || status === 'POSTPONED_CANCELLED') {
+                          return (
+                            <select disabled style={{ padding: '0.25rem', borderRadius: '0.25rem', border: '1px solid #fee2e2', background: '#fef2f2', color: '#991b1b', cursor: 'not-allowed', appearance: 'none', textAlign: 'center' }} title="Booking cancelled - Cannot book">
+                              <option>❌ Cancelled</option>
+                            </select>
+                          );
+                        }
+
+                        const isUnbooked = !status || status === 'UNBOOKED' || status === 'NOT_SCHEDULED';
 
                         return (
                           <select

@@ -52,8 +52,9 @@ export default function MyBookingsPage() {
   const hasActiveBooking = bookings.some(b => !['CANCELLED', 'POSTPONED_CANCELLED'].includes(b.status));
   
   const isPartiallyPaid = myLead?.paymentStatus === 'Partially Paid';
-  // Rule: Hide Book button entirely if Refunded OR Unpaid / Data Not Updated for Customer
-  const canCustomerBook = myLead && !hasActiveBooking && myLead.paymentStatus !== 'Unpaid' && myLead.paymentStatus !== 'Data Not Updated' && myLead.paymentStatus !== 'Refunded';
+  const isCancelled = myLead?.currentBookingStatus === 'CANCELLED' || myLead?.currentBookingStatus === 'POSTPONED_CANCELLED';
+  // Rule: Hide Book button entirely if Refunded, Cancelled, OR Unpaid / Data Not Updated for Customer
+  const canCustomerBook = myLead && !hasActiveBooking && !isCancelled && myLead.paymentStatus !== 'Unpaid' && myLead.paymentStatus !== 'Data Not Updated' && myLead.paymentStatus !== 'Refunded';
 
   return (
     <div className="app-container">
@@ -77,6 +78,12 @@ export default function MyBookingsPage() {
             )}
           </div>
         </header>
+
+        {isCancelled && (
+          <div className="alert alert-danger" style={{ marginBottom: '1.5rem', fontSize: '0.875rem' }}>
+            ❌ <strong>Booking Cancelled:</strong> This inspection booking has been cancelled. Please contact our support team.
+          </div>
+        )}
 
         {isPartiallyPaid && !hasActiveBooking && (
           <div className="alert alert-warning" style={{ marginBottom: '1.5rem', fontSize: '0.875rem' }}>
