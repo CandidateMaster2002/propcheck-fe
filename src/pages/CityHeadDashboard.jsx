@@ -109,11 +109,11 @@ export default function CityHeadDashboard() {
       if (action === 'CANCEL') {
         await client.put(`/bookings/for-lead/${lead.id}/cancel`);
       } else if (action === 'MARK_DONE') {
-        await client.put(`/bookings/${bookingId}/mark-done`);
+        await client.put(`/bookings/for-lead/${lead.id}/mark-done`);
       } else if (action === 'MARK_VALIDATION_DONE') {
         await client.put(`/bookings/for-lead/${lead.id}/mark-validation-done`);
       } else if (action === 'REPORT_SENT') {
-        await client.put(`/bookings/${bookingId}/report-sent`);
+        await client.put(`/bookings/for-lead/${lead.id}/report-sent`);
       }
       fetchLeads(); // refresh immediately
     } catch (err) {

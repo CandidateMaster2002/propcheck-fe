@@ -97,9 +97,9 @@ export default function LeadDetail() {
     setSendingReport(true);
     try {
       try {
-        await client.put(`/bookings/for-lead/${id}/send-report`);
+        await client.put(`/bookings/for-lead/${id}/report-sent`);
       } catch {
-        await client.post(`/bookings/${lead.currentBookingId || id}/send-report`);
+        await client.put(`/bookings/${lead.currentBookingId || id}/report-sent`);
       }
       setLead(prev => ({ ...prev, currentBookingStatus: 'REPORT_SENT' }));
       showToast('Report successfully sent to customer email & portal unlocked! ✅', 'success');
