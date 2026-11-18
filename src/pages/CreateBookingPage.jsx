@@ -396,6 +396,7 @@ export default function CreateBookingPage() {
                 className="btn btn-primary"
                 style={{ width: '100%', padding: '1rem', fontSize: '1rem' }}
                 disabled={!isFormValid || submitting || (selectedLead?.paymentStatus !== 'Fully Paid' && role !== 'CITY_HEAD' && role !== 'CITY_LEAD' && role !== 'ADMIN')}
+                title={selectedLead?.paymentStatus !== 'Fully Paid' && role !== 'CITY_HEAD' && role !== 'CITY_LEAD' && role !== 'ADMIN' ? 'Only City Lead has permission to schedule inspections for partially paid leads.' : undefined}
               >
                 {submitting ? 'Creating Booking...' : 'Confirm & Book Inspection'}
               </button>

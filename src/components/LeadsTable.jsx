@@ -283,7 +283,13 @@ export default function LeadsTable({ leads, users = [], loading, emptyMessage, o
                           >
                             <option value="" disabled>⚙️ ▾</option>
                             {(status === 'UNBOOKED' || status === 'POSTPONED_CANCELLED') && lead.paymentStatus !== 'Refunded' && (
-                              <option value="BOOK">Book</option>
+                              role === 'SALES' && lead.paymentStatus !== 'Fully Paid' ? (
+                                <option value="" disabled title="Only City Lead has permission to schedule inspections for partially paid leads.">
+                                  Book (City Lead Only)
+                                </option>
+                              ) : (
+                                <option value="BOOK">Book</option>
+                              )
                             )}
                             {status === 'PENDING_ENGINEER_ASSIGNMENT' && (
                               <>

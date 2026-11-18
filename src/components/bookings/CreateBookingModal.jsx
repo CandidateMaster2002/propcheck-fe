@@ -287,7 +287,12 @@ export default function CreateBookingModal({ lead, onClose, onSuccess }) {
 
           {/* Availability Checks & Alerts */}
           <div style={{ marginTop: '1.5rem' }}>
-            {isCustomer && (lead?.paymentStatus === 'Partially Paid' || isNonStandard) && (
+            {lead && lead.paymentStatus !== 'Fully Paid' && role !== 'CITY_HEAD' && role !== 'CITY_LEAD' && role !== 'ADMIN' && (
+              <div className="alert alert-danger" style={{ marginTop: '1rem', fontSize: '0.875rem', backgroundColor: '#fee2e2', color: '#991b1b', border: '1px solid #f87171', padding: '0.75rem', borderRadius: '0.5rem' }}>
+                ⛔ <strong>Scheduling Restricted:</strong> This lead has status <em>"{lead.paymentStatus === 'Unpaid' ? 'Data Not Updated' : (lead.paymentStatus || 'Data Not Updated')}"</em>. Partially paid leads can only be scheduled by a <strong>City Lead</strong>.
+              </div>
+            )}
+            {isCustomer && (lead?.paymentStatus === 'Fully Paid' && isNonStandard) && (
               <div className="alert alert-warning" style={{ marginTop: '1rem', fontSize: '0.8125rem' }}>
                 ℹ️ Your booking will be reviewed and approved by our team before confirmation.
               </div>
@@ -299,7 +304,8 @@ export default function CreateBookingModal({ lead, onClose, onSuccess }) {
               type="submit"
               className="btn btn-primary"
               style={{ width: '100%', padding: '1rem', fontSize: '1rem' }}
-              disabled={!isFormValid || submitting}
+              disabled={!isFormValid || submitting || (lead?.paymentStatus !== 'Fully Paid' && role !== 'CITY_HEAD' && role !== 'CITY_LEAD' && role !== 'ADMIN')}
+              title={lead?.paymentStatus !== 'Fully Paid' && role !== 'CITY_HEAD' && role !== 'CITY_LEAD' && role !== 'ADMIN' ? 'Only City Lead has permission to schedule inspections for partially paid leads.' : undefined}
             >
               {submitting ? 'Creating Booking...' : 'Confirm & Book Inspection'}
             </button>

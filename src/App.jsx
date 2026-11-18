@@ -57,6 +57,18 @@ function App() {
         </ProtectedRoute>
       } />
 
+      <Route path="/bookings" element={
+        <ProtectedRoute allowedRoles={['ADMIN', 'SALES', 'CITY_HEAD']}>
+          <BookingsPage />
+        </ProtectedRoute>
+      } />
+
+      <Route path="/create-booking" element={
+        <ProtectedRoute allowedRoles={['ADMIN', 'SALES', 'CITY_HEAD']}>
+          <CreateBookingPage />
+        </ProtectedRoute>
+      } />
+
       {/* Bookings — Customer */}
       <Route path="/my-bookings" element={
         <ProtectedRoute allowedRole="CUSTOMER">

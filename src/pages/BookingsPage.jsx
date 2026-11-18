@@ -128,6 +128,7 @@ export default function BookingsPage() {
           </div>
           <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
             <button className="btn btn-secondary" onClick={() => navigate(-1)}>← Back</button>
+            <button className="btn btn-primary" onClick={() => navigate('/create-booking')}>+ Schedule Inspection</button>
           </div>
         </header>
 

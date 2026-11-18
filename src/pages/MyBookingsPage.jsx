@@ -51,6 +51,7 @@ export default function MyBookingsPage() {
   // A booking is active if it's not CANCELLED and not POSTPONED_CANCELLED
   const hasActiveBooking = bookings.some(b => !['CANCELLED', 'POSTPONED_CANCELLED'].includes(b.status));
   
+  const isPartiallyPaid = myLead?.paymentStatus === 'Partially Paid';
   // Rule: Hide Book button entirely if Refunded OR Unpaid / Data Not Updated for Customer
   const canCustomerBook = myLead && !hasActiveBooking && myLead.paymentStatus !== 'Unpaid' && myLead.paymentStatus !== 'Data Not Updated' && myLead.paymentStatus !== 'Refunded';
 
@@ -65,12 +66,23 @@ export default function MyBookingsPage() {
           <div style={{ display: 'flex', gap: '0.5rem' }}>
             <button className="btn btn-secondary" onClick={() => navigate('/customer')}>← Dashboard</button>
             {canCustomerBook && (
-              <button className="btn btn-primary" onClick={() => setBookingLeadTarget(myLead)}>
+              <button 
+                className="btn btn-primary" 
+                onClick={() => !isPartiallyPaid && setBookingLeadTarget(myLead)}
+                disabled={isPartiallyPaid}
+                title={isPartiallyPaid ? "Only City Lead has permission to schedule inspections for partially paid leads." : undefined}
+              >
                 + Book Inspection
               </button>
             )}
           </div>
         </header>
+
+        {isPartiallyPaid && !hasActiveBooking && (
+          <div className="alert alert-warning" style={{ marginBottom: '1.5rem', fontSize: '0.875rem' }}>
+            ℹ️ <strong>Scheduling Restricted:</strong> Your account has status <em>"Partially Paid"</em>. Only a <strong>City Lead</strong> has permission to schedule inspections for partially paid leads. Please contact our team.
+          </div>
+        )}
 
         {loading ? (
           <div className="card" style={{ textAlign: 'center', padding: '3rem', color: 'var(--text-muted)' }}>
@@ -84,7 +96,12 @@ export default function MyBookingsPage() {
               You haven't booked an inspection yet.
             </p>
             {canCustomerBook && (
-              <button className="btn btn-primary" onClick={() => setBookingLeadTarget(myLead)}>
+              <button 
+                className="btn btn-primary" 
+                onClick={() => !isPartiallyPaid && setBookingLeadTarget(myLead)}
+                disabled={isPartiallyPaid}
+                title={isPartiallyPaid ? "Only City Lead has permission to schedule inspections for partially paid leads." : undefined}
+              >
                 Book Your First Inspection
               </button>
             )}
