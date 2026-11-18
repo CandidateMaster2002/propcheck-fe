@@ -23,11 +23,11 @@ const formatCurrency = (amount) => {
 };
 
 const PaymentBadge = ({ status }) => {
-  let bgColor = '#e0e7ff', color = '#3730a3';
-  if (status === 'Fully Paid') { bgColor = '#dcfce7'; color = '#166534'; }
-  else if (status === 'Partially Paid') { bgColor = '#fef08a'; color = '#854d0e'; }
-  else if (status === 'Unpaid') { bgColor = '#fee2e2'; color = '#991b1b'; }
-  else if (status === 'Refunded') { bgColor = '#f3f4f6'; color = '#374151'; }
+  let bgColor = '#e0e7ff', color = '#3730a3', label = status || 'Data Not Updated';
+  if (status === 'Fully Paid') { bgColor = '#dcfce7'; color = '#166534'; label = 'Fully Paid'; }
+  else if (status === 'Partially Paid') { bgColor = '#fef08a'; color = '#854d0e'; label = 'Partially Paid'; }
+  else if (status === 'Unpaid' || status === 'Data Not Updated' || !status) { bgColor = '#fee2e2'; color = '#991b1b'; label = 'Data Not Updated'; }
+  else if (status === 'Refunded') { bgColor = '#f3f4f6'; color = '#374151'; label = 'Refunded'; }
   
   return (
     <span style={{ 
@@ -40,7 +40,7 @@ const PaymentBadge = ({ status }) => {
       whiteSpace: 'nowrap',
       display: 'inline-block'
     }}>
-      {status || '—'}
+      {label}
     </span>
   );
 };
@@ -183,7 +183,7 @@ export default function CustomerDashboard() {
               value={formatCurrency(lead.pendingAmount)} 
               highlightRed={lead.pendingAmount > 0} 
             />
-            <Field label="Payment Status" value={lead.paymentStatus} />
+            <Field label="Payment Status" value={<PaymentBadge status={lead.paymentStatus} />} />
           </div>
         </div>
 

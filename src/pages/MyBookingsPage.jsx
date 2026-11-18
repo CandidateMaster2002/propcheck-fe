@@ -51,8 +51,8 @@ export default function MyBookingsPage() {
   // A booking is active if it's not CANCELLED and not POSTPONED_CANCELLED
   const hasActiveBooking = bookings.some(b => !['CANCELLED', 'POSTPONED_CANCELLED'].includes(b.status));
   
-  // Rule: Hide Book button entirely if Refunded OR Unpaid for Customer
-  const canCustomerBook = myLead && !hasActiveBooking && myLead.paymentStatus !== 'Unpaid' && myLead.paymentStatus !== 'Refunded';
+  // Rule: Hide Book button entirely if Refunded OR Unpaid / Data Not Updated for Customer
+  const canCustomerBook = myLead && !hasActiveBooking && myLead.paymentStatus !== 'Unpaid' && myLead.paymentStatus !== 'Data Not Updated' && myLead.paymentStatus !== 'Refunded';
 
   return (
     <div className="app-container">

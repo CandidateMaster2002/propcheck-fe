@@ -212,7 +212,7 @@ export default function CreateBookingPage() {
                         {lead.city} · {lead.phone}
                       </div>
                       <div style={{ fontSize: '0.75rem', marginTop: '0.4rem', color: '#047857', fontWeight: 500 }}>
-                        {lead.paymentStatus} · {lead.inspectionType}
+                        {(lead.paymentStatus === 'Unpaid' ? 'Data Not Updated' : lead.paymentStatus) || 'Data Not Updated'} · {lead.inspectionType}
                       </div>
                     </div>
                   ))}
@@ -379,7 +379,7 @@ export default function CreateBookingPage() {
             <div style={{ marginTop: '1.5rem' }}>
               {selectedLead && selectedLead.paymentStatus !== 'Fully Paid' && role !== 'CITY_HEAD' && role !== 'CITY_LEAD' && role !== 'ADMIN' && (
                 <div className="alert alert-danger" style={{ marginTop: '1rem', fontSize: '0.875rem', backgroundColor: '#fee2e2', color: '#991b1b', border: '1px solid #f87171', padding: '0.75rem', borderRadius: '0.5rem' }}>
-                  ⛔ <strong>Scheduling Restricted:</strong> This lead has status <em>"{selectedLead.paymentStatus || 'Data Not Updated'}"</em>. Partially paid leads can only be scheduled by a <strong>City Lead</strong>.
+                  ⛔ <strong>Scheduling Restricted:</strong> This lead has status <em>"{selectedLead.paymentStatus === 'Unpaid' ? 'Data Not Updated' : (selectedLead.paymentStatus || 'Data Not Updated')}"</em>. Partially paid leads can only be scheduled by a <strong>City Lead</strong>.
                 </div>
               )}
               {isCustomer && (selectedLead?.paymentStatus === 'Fully Paid' && isNonStandard) && (

@@ -259,7 +259,7 @@ export default function AnalyticsDashboard() {
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.5rem', fontSize: '0.8125rem' }}>
                 {Object.entries(paymentSummary.byPaymentStatus || {}).map(([status, count]) => (
                   <div key={status} style={{ display: 'flex', justifyContent: 'space-between', padding: '0.5rem', backgroundColor: '#f9fafb', borderRadius: '0.25rem' }}>
-                    <span>{status}</span>
+                    <span>{status === 'Unpaid' ? 'Data Not Updated' : status}</span>
                     <strong style={{ color: 'var(--text-main)' }}>{count}</strong>
                   </div>
                 ))}

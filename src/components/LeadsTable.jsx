@@ -21,10 +21,10 @@ const formatCurrency = (amount) => {
 };
 
 const PaymentBadge = ({ status }) => {
-  let bgColor = '#e0e7ff', color = '#3730a3', label = status || '-';
+  let bgColor = '#e0e7ff', color = '#3730a3', label = status || 'Data Not Updated';
   if (status === 'Fully Paid') { bgColor = '#dcfce7'; color = '#166534'; label = 'Fully Paid'; }
   else if (status === 'Partially Paid') { bgColor = '#fef08a'; color = '#854d0e'; label = 'Partially Paid'; }
-  else if (status === 'Unpaid' || status === 'Data Not Updated') { bgColor = '#fee2e2'; color = '#991b1b'; label = 'Data Not Updated'; }
+  else if (status === 'Unpaid' || status === 'Data Not Updated' || !status) { bgColor = '#fee2e2'; color = '#991b1b'; label = 'Data Not Updated'; }
   else if (status === 'Refunded') { bgColor = '#f3f4f6'; color = '#374151'; label = 'Refunded'; }
   
   return (
@@ -77,6 +77,9 @@ export default function LeadsTable({ leads, users = [], loading, emptyMessage, o
   // Apply payment filter
   const filteredLeads = useMemo(() => {
     if (paymentFilter === 'All') return leads;
+    if (paymentFilter === 'Data Not Updated' || paymentFilter === 'Unpaid') {
+      return leads.filter(l => l.paymentStatus === 'Unpaid' || l.paymentStatus === 'Data Not Updated' || !l.paymentStatus);
+    }
     return leads.filter(l => l.paymentStatus === paymentFilter);
   }, [leads, paymentFilter]);
 
@@ -166,7 +169,7 @@ export default function LeadsTable({ leads, users = [], loading, emptyMessage, o
         {/* Payment Status Filter Tabs */}
         <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap', alignItems: 'center' }}>
           <span style={{ fontSize: '0.875rem', fontWeight: 500, color: 'var(--text-muted)', marginRight: '0.5rem' }}>Payment Status:</span>
-          {['All', 'Fully Paid', 'Partially Paid', 'Unpaid', 'Refunded'].map(status => (
+          {['All', 'Fully Paid', 'Partially Paid', 'Data Not Updated', 'Refunded'].map(status => (
             <button 
               key={status}
               onClick={() => setPaymentFilter(status)}
