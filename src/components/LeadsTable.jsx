@@ -244,15 +244,25 @@ export default function LeadsTable({ leads, users = [], loading, emptyMessage, o
                   {onBookClick && (
                     <td style={{ textAlign: 'center', overflow: 'visible' }}>
                       {(() => {
-                        const status = lead.currentBookingStatus || 'UNBOOKED';
+                        const status = lead.currentBookingStatus || 'NOT_SCHEDULED';
                         
                         if (status === 'REPORT_SENT') {
                           return (
-                            <select disabled style={{ padding: '0.25rem', borderRadius: '0.25rem', border: '1px solid #d1d5db', background: '#f3f4f6', color: '#9ca3af', cursor: 'not-allowed', appearance: 'none', textAlign: 'center' }} title="No Actions">
+                            <select disabled style={{ padding: '0.25rem', borderRadius: '0.25rem', border: '1px solid #d1d5db', background: '#f3f4f6', color: '#9ca3af', cursor: 'not-allowed', appearance: 'none', textAlign: 'center' }} title="Report Sent - Completed">
                               <option>🔒</option>
                             </select>
                           );
                         }
+
+                        if (lead.paymentStatus === 'Refunded') {
+                          return (
+                            <select disabled style={{ padding: '0.25rem', borderRadius: '0.25rem', border: '1px solid #d1d5db', background: '#f3f4f6', color: '#6b7280', cursor: 'not-allowed', appearance: 'none', textAlign: 'center' }} title="Booking not allowed: Lead is refunded">
+                              <option>🚫 Refunded</option>
+                            </select>
+                          );
+                        }
+
+                        const isUnbooked = !status || status === 'UNBOOKED' || status === 'NOT_SCHEDULED' || status === 'POSTPONED_CANCELLED' || status === 'CANCELLED';
 
                         return (
                           <select
@@ -281,37 +291,47 @@ export default function LeadsTable({ leads, users = [], loading, emptyMessage, o
                             }}
                             title="Actions"
                           >
-                            <option value="" disabled>⚙️ ▾</option>
-                            {(status === 'UNBOOKED' || status === 'POSTPONED_CANCELLED') && lead.paymentStatus !== 'Refunded' && (
+                            <option value="" disabled style={{ color: '#6b7280' }}>⚙️ Actions</option>
+                            {isUnbooked && lead.paymentStatus !== 'Refunded' && (
                               role === 'SALES' && lead.paymentStatus !== 'Fully Paid' ? (
-                                <option value="" disabled title="Only City Lead has permission to schedule inspections for partially paid leads.">
+                                <option value="" disabled style={{ color: '#991b1b' }} title="Only City Lead has permission to schedule inspections for partially paid leads.">
                                   Book (City Lead Only)
                                 </option>
                               ) : (
-                                <option value="BOOK">Book</option>
+                                <option value="BOOK" style={{ color: '#111827' }}>Book</option>
                               )
+                            )}
+                            {status === 'POSTPONED' && lead.paymentStatus !== 'Refunded' && (
+                              <option value="RESCHEDULE" style={{ color: '#111827' }}>Change Date</option>
+                            )}
+                            {status === 'PENDING_APPROVAL' && (
+                              <>
+                                {lead.paymentStatus !== 'Refunded' && <option value="RESCHEDULE" style={{ color: '#111827' }}>Change Date</option>}
+                                <option value="CANCEL" style={{ color: '#991b1b' }}>Cancel</option>
+                              </>
                             )}
                             {status === 'PENDING_ENGINEER_ASSIGNMENT' && (
                               <>
-                                {lead.paymentStatus !== 'Refunded' && <option value="RESCHEDULE">Change Date</option>}
-                                {role !== 'SALES' && <option value="ASSIGN_ENGINEER">Allot Engineer</option>}
-                                {role !== 'SALES' && <option value="CANCEL">Postpone / Cancel</option>}
+                                {lead.paymentStatus !== 'Refunded' && <option value="RESCHEDULE" style={{ color: '#111827' }}>Change Date</option>}
+                                {role !== 'SALES' && <option value="ASSIGN_ENGINEER" style={{ color: '#111827' }}>Allot Engineer</option>}
+                                {role !== 'SALES' && <option value="CANCEL" style={{ color: '#991b1b' }}>Postpone / Cancel</option>}
                               </>
                             )}
-                            {(status === 'CONFIRMED' || status === 'CONFLICT') && role !== 'SALES' && (
+                            {(status === 'CONFIRMED' || status === 'CONFLICT') && (
                               <>
-                                <option value="MARK_DONE">Mark Inspection Done</option>
-                                <option value="CANCEL">Postpone / Cancel</option>
+                                {lead.paymentStatus !== 'Refunded' && <option value="RESCHEDULE" style={{ color: '#111827' }}>Change Date</option>}
+                                {role !== 'SALES' && <option value="MARK_DONE" style={{ color: '#111827' }}>Mark Inspection Done</option>}
+                                {role !== 'SALES' && <option value="CANCEL" style={{ color: '#991b1b' }}>Postpone / Cancel</option>}
                               </>
                             )}
                             {status === 'INSPECTION_DONE' && role !== 'SALES' && (
                               <>
-                                <option value="MARK_VALIDATION_DONE">Mark Validation Done</option>
-                                <option value="REPORT_SENT">Report Sent</option>
+                                <option value="MARK_VALIDATION_DONE" style={{ color: '#111827' }}>Mark Validation Done</option>
+                                <option value="REPORT_SENT" style={{ color: '#111827' }}>Report Sent</option>
                               </>
                             )}
                             {status === 'VALIDATION_DONE' && role !== 'SALES' && (
-                              <option value="REPORT_SENT">Report Sent</option>
+                              <option value="REPORT_SENT" style={{ color: '#111827' }}>Report Sent</option>
                             )}
                           </select>
                         );
