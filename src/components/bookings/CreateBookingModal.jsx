@@ -8,6 +8,8 @@ const REINSPECTION_ELIGIBLE_TYPES = [
   'Inspection+Re-Inspection',
   'Inspection+Re-Inspection+Interior',
 ];
+const MORNING_TIMES = ['09:30', '10:00', '10:30'];
+const EVENING_TIMES = ['13:30', '14:00', '14:30'];
 
 export default function CreateBookingModal({ lead, onClose, onSuccess }) {
   const { id: currentUserId, role } = useAuth();
@@ -238,7 +240,7 @@ export default function CreateBookingModal({ lead, onClose, onSuccess }) {
                   transition: 'all 0.15s'
                 }}
               >
-                🌅 Morning <span style={{ fontWeight: 400, color: 'inherit', fontSize: '0.75rem', display: 'block' }}>10:00 - 11:30</span>
+                🌅 Morning <span style={{ fontWeight: 400, color: 'inherit', fontSize: '0.75rem', display: 'block' }}>09:30 - 10:30</span>
               </button>
               <button
                 type="button"
@@ -253,7 +255,7 @@ export default function CreateBookingModal({ lead, onClose, onSuccess }) {
                   transition: 'all 0.15s'
                 }}
               >
-                🌆 Evening <span style={{ fontWeight: 400, color: 'inherit', fontSize: '0.75rem', display: 'block' }}>14:00 - 16:00</span>
+                🌆 Evening <span style={{ fontWeight: 400, color: 'inherit', fontSize: '0.75rem', display: 'block' }}>13:30 - 14:30</span>
               </button>
             </div>
           </div>
@@ -263,7 +265,7 @@ export default function CreateBookingModal({ lead, onClose, onSuccess }) {
             <div className="form-group" style={{ marginTop: '1.5rem' }}>
               <label>Select Time</label>
               <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap', marginTop: '0.5rem' }}>
-                {(slot === 'MORNING' ? ['10:00', '10:30', '11:00', '11:30'] : ['14:00', '14:30', '15:00', '15:30', '16:00']).map(t => (
+                {(slot === 'MORNING' ? MORNING_TIMES : EVENING_TIMES).map(t => (
                   <button
                     key={t}
                     type="button"

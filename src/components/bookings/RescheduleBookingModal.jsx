@@ -5,8 +5,8 @@ import { useAuth } from '../../context/AuthContext';
 import { BookingStatusBadge, SlotBadge, BookingTypeBadge } from './BookingStatusBadge';
 
 const STANDARD_CITIES = ['Bangalore', 'Hyderabad', 'Delhi NCR', 'Mumbai', 'Pune'];
-const MORNING_TIMES = ['10:00', '10:30', '11:00', '11:30'];
-const EVENING_TIMES = ['14:00', '14:30', '15:00', '15:30', '16:00'];
+const MORNING_TIMES = ['09:30', '10:00', '10:30'];
+const EVENING_TIMES = ['13:30', '14:00', '14:30'];
 
 export default function RescheduleBookingModal({ booking, onClose, onSuccess }) {
   const { id: currentUserId } = useAuth();
@@ -193,7 +193,7 @@ export default function RescheduleBookingModal({ booking, onClose, onSuccess }) 
                   transition: 'all 0.15s',
                 }}
               >
-                🌅 Morning
+                🌅 Morning <span style={{ fontWeight: 400, color: 'inherit', fontSize: '0.75rem', display: 'block' }}>09:30 - 10:30</span>
               </button>
               <button
                 type="button"
@@ -208,7 +208,7 @@ export default function RescheduleBookingModal({ booking, onClose, onSuccess }) 
                   transition: 'all 0.15s',
                 }}
               >
-                🌆 Evening
+                🌆 Evening <span style={{ fontWeight: 400, color: 'inherit', fontSize: '0.75rem', display: 'block' }}>13:30 - 14:30</span>
               </button>
             </div>
           </div>

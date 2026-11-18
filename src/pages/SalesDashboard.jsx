@@ -98,7 +98,7 @@ export default function SalesDashboard() {
     // Open Modals for complex actions
     if (action === 'RESCHEDULE') {
       const slotTimeStr = lead.inspectionDateAndTime ? new Date(lead.inspectionDateAndTime).toLocaleTimeString('en-US', { hour12: false }) : '';
-      const assumedSlot = (slotTimeStr && parseInt(slotTimeStr.split(':')[0]) >= 14) ? 'EVENING' : 'MORNING';
+      const assumedSlot = (slotTimeStr && parseInt(slotTimeStr.split(':')[0]) >= 13) ? 'EVENING' : 'MORNING';
       setRescheduleTarget({
         ...lead,
         id: bookingId,
@@ -109,7 +109,7 @@ export default function SalesDashboard() {
     
     if (action === 'ASSIGN_ENGINEER') {
       const slotTimeStr = lead.inspectionDateAndTime ? new Date(lead.inspectionDateAndTime).toLocaleTimeString('en-US', { hour12: false }) : '';
-      const assumedSlot = (slotTimeStr && parseInt(slotTimeStr.split(':')[0]) >= 14) ? 'EVENING' : 'MORNING';
+      const assumedSlot = (slotTimeStr && parseInt(slotTimeStr.split(':')[0]) >= 13) ? 'EVENING' : 'MORNING';
       setAssignEngineerTarget({
         ...lead,
         id: bookingId,
