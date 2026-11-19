@@ -248,7 +248,7 @@ function UsersTable({ users, onRefresh, loading, onEdit, onDelete }) {
                   <td style={{ color: 'var(--text-muted)' }}>{user.email}</td>
                   <td>
                     <span className="badge">
-                      {user.role}
+                      {user.role === 'CITY_HEAD' ? 'City Lead' : user.role}
                     </span>
                   </td>
                   <td>{user.city ?? '-'}</td>

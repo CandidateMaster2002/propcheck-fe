@@ -123,7 +123,7 @@ export default function RescheduleBookingModal({ booking, onClose, onSuccess }) 
           </div>
 
           <div className="alert alert-warning" style={{ marginBottom: '1.5rem', fontSize: '0.8125rem' }}>
-            ⚠️ Rescheduling will remove the assigned engineer (if any). The City Head will need to assign a new engineer after rescheduling.
+            ⚠️ Rescheduling will remove the assigned engineer (if any). The City Lead will need to assign a new engineer after rescheduling.
           </div>
 
           {/* New Date */}

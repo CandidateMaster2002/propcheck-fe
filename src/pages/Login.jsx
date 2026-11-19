@@ -128,7 +128,7 @@ export default function Login() {
               onClick={() => fillDemo('cityhead.hyd1@example.com', '123')}
               style={{ fontSize: '0.8125rem', padding: '0.5rem' }}
             >
-              City Head (Hyderabad)
+              City Lead (Hyderabad)
             </button>
             <button 
               type="button" 
