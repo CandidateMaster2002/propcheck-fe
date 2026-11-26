@@ -30,7 +30,7 @@ export const AuthProvider = ({ children }) => {
       email: userData.email ?? null,
       role: userData.role ?? null,
       city: userData.city ?? null,
-      canValidate: Boolean(userData.canValidate || userData.role === 'ADMIN' || userData.role === 'VALIDATOR')
+      canValidate: Boolean(userData.canValidate || userData.role === 'SUPER_ADMIN' || userData.role === 'ADMIN' || userData.role === 'VALIDATOR')
     };
     
     setAuthState(newUserState);

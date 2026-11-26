@@ -147,7 +147,7 @@ export default function SalesDashboard() {
             <p style={{ color: 'var(--text-muted)' }}>Welcome back, {name || 'Sales User'}</p>
           </div>
           <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
-            {role === 'ADMIN' && (
+            {(role === 'ADMIN' || role === 'SUPER_ADMIN') && (
               <button className="btn btn-secondary" onClick={() => navigate('/admin')}>🛡️ Admin Portal</button>
             )}
             {canValidate && (

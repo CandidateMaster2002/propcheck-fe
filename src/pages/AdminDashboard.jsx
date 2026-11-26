@@ -4,7 +4,7 @@ import { useAuth } from '../context/AuthContext';
 import client from '../api/client';
 import EditUserModal from '../components/EditUserModal';
 
-function AddUserModal({ onClose, onSuccess }) {
+function AddUserModal({ isSuperAdmin, onClose, onSuccess }) {
   const [userType, setUserType] = useState('SALES');
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
@@ -19,7 +19,9 @@ function AddUserModal({ onClose, onSuccess }) {
     setLoading(true);
     setError('');
     try {
-      if (userType === 'CITY_HEAD') {
+      if (userType === 'ADMIN') {
+        await client.post('/users/admin', { name, email, password, canValidate: true });
+      } else if (userType === 'CITY_HEAD') {
         await client.post('/users/cityhead', { name, email, password, city, canValidate });
       } else {
         await client.post('/users/sales', { name, email, password, canValidate });
@@ -32,6 +34,12 @@ function AddUserModal({ onClose, onSuccess }) {
       setLoading(false);
     }
   };
+
+  const userTypeOptions = [
+    { value: 'SALES', title: 'Sales Person', desc: 'Leads & bookings', icon: '💼' },
+    { value: 'CITY_HEAD', title: 'City Lead', desc: 'City ops & inspectors', icon: '🏙️' },
+    ...(isSuperAdmin ? [{ value: 'ADMIN', title: 'Admin', desc: 'All ops except Admin CRUD', icon: '🛡️' }] : []),
+  ];
 
   return (
     <div
@@ -90,11 +98,8 @@ function AddUserModal({ onClose, onSuccess }) {
             <label style={{ display: 'block', fontSize: '0.85rem', fontWeight: 600, marginBottom: '0.5rem' }}>
               User Type
             </label>
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.75rem' }}>
-              {[
-                { value: 'SALES', title: 'Sales Person', desc: 'Leads & bookings', icon: '💼' },
-                { value: 'CITY_HEAD', title: 'City Lead', desc: 'City ops & inspectors', icon: '🏙️' },
-              ].map((opt) => {
+            <div style={{ display: 'grid', gridTemplateColumns: `repeat(${userTypeOptions.length}, 1fr)`, gap: '0.6rem' }}>
+              {userTypeOptions.map((opt) => {
                 const active = userType === opt.value;
                 return (
                   <button
@@ -172,36 +177,38 @@ function AddUserModal({ onClose, onSuccess }) {
             </div>
           )}
 
-          <label
-            htmlFor="add-user-validate"
-            style={{
-              display: 'flex',
-              alignItems: 'center',
-              gap: '0.65rem',
-              padding: '0.75rem',
-              borderRadius: '0.6rem',
-              border: `1px solid ${canValidate ? '#86efac' : '#e2e8f0'}`,
-              background: canValidate ? '#f0fdf4' : '#f8fafc',
-              cursor: 'pointer',
-              marginBottom: '1rem',
-            }}
-          >
-            <input
-              id="add-user-validate"
-              type="checkbox"
-              checked={canValidate}
-              onChange={(e) => setCanValidate(e.target.checked)}
-              style={{ width: 'auto', margin: 0 }}
-            />
-            <div>
-              <div style={{ fontWeight: 600, fontSize: '0.875rem', color: '#0f172a' }}>
-                Assign Validation Power
+          {userType !== 'ADMIN' && (
+            <label
+              htmlFor="add-user-validate"
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: '0.65rem',
+                padding: '0.75rem',
+                borderRadius: '0.6rem',
+                border: `1px solid ${canValidate ? '#86efac' : '#e2e8f0'}`,
+                background: canValidate ? '#f0fdf4' : '#f8fafc',
+                cursor: 'pointer',
+                marginBottom: '1rem',
+              }}
+            >
+              <input
+                id="add-user-validate"
+                type="checkbox"
+                checked={canValidate}
+                onChange={(e) => setCanValidate(e.target.checked)}
+                style={{ width: 'auto', margin: 0 }}
+              />
+              <div>
+                <div style={{ fontWeight: 600, fontSize: '0.875rem', color: '#0f172a' }}>
+                  Assign Validation Power
+                </div>
+                <div style={{ fontSize: '0.75rem', color: '#64748b' }}>
+                  Allows reviewing inspection reports & approving QC
+                </div>
               </div>
-              <div style={{ fontSize: '0.75rem', color: '#64748b' }}>
-                Allows reviewing inspection reports & approving QC
-              </div>
-            </div>
-          </label>
+            </label>
+          )}
 
           {error && (
             <div className="alert alert-error" role="alert" style={{ marginBottom: '1rem' }}>
@@ -214,7 +221,7 @@ function AddUserModal({ onClose, onSuccess }) {
               Cancel
             </button>
             <button type="submit" className="btn btn-primary" disabled={loading}>
-              {loading ? 'Creating...' : `Create ${userType === 'CITY_HEAD' ? 'City Lead' : 'Sales Person'}`}
+              {loading ? 'Creating...' : `Create ${userType === 'ADMIN' ? 'Admin' : userType === 'CITY_HEAD' ? 'City Lead' : 'Sales Person'}`}
             </button>
           </div>
         </form>
@@ -224,6 +231,7 @@ function AddUserModal({ onClose, onSuccess }) {
 }
 
 const ROLE_STYLES = {
+  SUPER_ADMIN: { bg: '#fae8ff', color: '#86198f', label: 'Super Admin' },
   ADMIN: { bg: '#ede9fe', color: '#5b21b6', label: 'Admin' },
   CITY_HEAD: { bg: '#dbeafe', color: '#1d4ed8', label: 'City Lead' },
   SALES: { bg: '#fef3c7', color: '#92400e', label: 'Sales' },
@@ -231,7 +239,8 @@ const ROLE_STYLES = {
 };
 
 export default function AdminDashboard() {
-  const { logout, name: adminName } = useAuth();
+  const { logout, name: adminName, role: currentRole } = useAuth();
+  const isSuperAdmin = currentRole === 'SUPER_ADMIN';
   const navigate = useNavigate();
 
   const [users, setUsers] = useState([]);
@@ -285,14 +294,15 @@ export default function AdminDashboard() {
     total: users.length,
     sales: users.filter((u) => u.role === 'SALES').length,
     cityLeads: users.filter((u) => u.role === 'CITY_HEAD').length,
-    validators: users.filter((u) => u.canValidate || u.role === 'ADMIN' || u.role === 'VALIDATOR').length,
+    validators: users.filter((u) => u.canValidate || u.role === 'SUPER_ADMIN' || u.role === 'ADMIN' || u.role === 'VALIDATOR').length,
   }), [users]);
 
   const filteredUsers = useMemo(() => {
     const q = search.trim().toLowerCase();
     return users.filter((u) => {
-      if (roleFilter === 'VALIDATORS' && !(u.canValidate || u.role === 'ADMIN' || u.role === 'VALIDATOR')) return false;
-      if (roleFilter !== 'ALL' && roleFilter !== 'VALIDATORS' && u.role !== roleFilter) return false;
+      if (roleFilter === 'VALIDATORS' && !(u.canValidate || u.role === 'SUPER_ADMIN' || u.role === 'ADMIN' || u.role === 'VALIDATOR')) return false;
+      if (roleFilter === 'ADMINS' && !(u.role === 'ADMIN' || u.role === 'SUPER_ADMIN')) return false;
+      if (roleFilter !== 'ALL' && roleFilter !== 'VALIDATORS' && roleFilter !== 'ADMINS' && u.role !== roleFilter) return false;
       if (!q) return true;
       return (
         (u.name || '').toLowerCase().includes(q) ||
@@ -307,9 +317,9 @@ export default function AdminDashboard() {
       <div className="dashboard-container">
         <header className="dashboard-header">
           <div>
-            <h1 style={{ marginBottom: 0 }}>Admin Portal</h1>
+            <h1 style={{ marginBottom: 0 }}>{isSuperAdmin ? 'Super Admin Portal' : 'Admin Portal'}</h1>
             <p style={{ color: 'var(--text-muted)' }}>
-              Welcome back, {adminName || 'Admin'} · Manage team roles & validation access
+              Welcome back, {adminName || 'Admin'} · {isSuperAdmin ? 'Full system & admin management' : 'Manage team roles & operations'}
             </p>
           </div>
           <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
@@ -489,6 +499,7 @@ export default function AdminDashboard() {
                 { key: 'SALES', label: 'Sales' },
                 { key: 'CITY_HEAD', label: 'City Leads' },
                 { key: 'VALIDATORS', label: 'Validators' },
+                { key: 'ADMINS', label: 'Admins' },
               ].map((tab) => {
                 const active = roleFilter === tab.key;
                 return (
@@ -575,7 +586,7 @@ export default function AdminDashboard() {
                         </td>
                         <td>{user.city || '—'}</td>
                         <td>
-                          {user.role === 'ADMIN' ? (
+                          {user.role === 'ADMIN' || user.role === 'SUPER_ADMIN' ? (
                             <span className="badge" style={{ background: '#dcfce7', color: '#166534' }}>
                               Full Access
                             </span>
@@ -596,25 +607,33 @@ export default function AdminDashboard() {
                           )}
                         </td>
                         <td>
-                          <button
-                            className="btn btn-secondary"
-                            onClick={() => setEditingUser(user)}
-                            style={{ padding: '0.25rem 0.6rem', fontSize: '0.75rem', marginRight: '0.4rem' }}
-                          >
-                            Edit
-                          </button>
-                          <button
-                            className="btn btn-primary"
-                            onClick={() => handleDeleteUser(user.id)}
-                            style={{
-                              padding: '0.25rem 0.6rem',
-                              fontSize: '0.75rem',
-                              background: 'var(--error-color)',
-                              borderColor: 'var(--error-color)',
-                            }}
-                          >
-                            Delete
-                          </button>
+                          {user.role === 'SUPER_ADMIN' ? (
+                            <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>Protected</span>
+                          ) : user.role === 'ADMIN' && !isSuperAdmin ? (
+                            <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>Super Admin Only</span>
+                          ) : (
+                            <>
+                              <button
+                                className="btn btn-secondary"
+                                onClick={() => setEditingUser(user)}
+                                style={{ padding: '0.25rem 0.6rem', fontSize: '0.75rem', marginRight: '0.4rem' }}
+                              >
+                                Edit
+                              </button>
+                              <button
+                                className="btn btn-primary"
+                                onClick={() => handleDeleteUser(user.id)}
+                                style={{
+                                  padding: '0.25rem 0.6rem',
+                                  fontSize: '0.75rem',
+                                  background: 'var(--error-color)',
+                                  borderColor: 'var(--error-color)',
+                                }}
+                              >
+                                Delete
+                              </button>
+                            </>
+                          )}
                         </td>
                       </tr>
                     );
@@ -627,6 +646,7 @@ export default function AdminDashboard() {
 
         {showAddModal && (
           <AddUserModal
+            isSuperAdmin={isSuperAdmin}
             onClose={() => setShowAddModal(false)}
             onSuccess={fetchUsers}
           />

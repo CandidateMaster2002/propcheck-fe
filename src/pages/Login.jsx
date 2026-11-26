@@ -4,6 +4,7 @@ import { useAuth } from '../context/AuthContext';
 import client from '../api/client';
 
 const ROLE_ROUTES = {
+  SUPER_ADMIN: '/admin',
   ADMIN: '/admin',
   SALES: '/sales',
   CITY_HEAD: '/cityhead',

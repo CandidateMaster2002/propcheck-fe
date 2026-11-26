@@ -55,7 +55,7 @@ export default function EditUserModal({ user, onClose, onSuccess }) {
             <input type="password" value={password} onChange={e => setPassword(e.target.value)} placeholder="••••••••" />
           </div>
 
-          {user.role !== 'ADMIN' && (
+          {user.role !== 'ADMIN' && user.role !== 'SUPER_ADMIN' && (
             <div className="form-group" style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
               <input
                 id="edit-can-validate"

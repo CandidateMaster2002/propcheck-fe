@@ -11,12 +11,12 @@ export default function ProtectedRoute({ allowedRole, allowedRoles, requireValid
   }
 
   if (requireValidator) {
-    const hasAccess = role === 'ADMIN' || role === 'VALIDATOR' || Boolean(canValidate);
+    const hasAccess = role === 'SUPER_ADMIN' || role === 'ADMIN' || role === 'VALIDATOR' || Boolean(canValidate);
     if (!hasAccess) return <Navigate to="/login" replace />;
     return children;
   }
 
-  if (role === 'ADMIN' && allowedRole !== 'CUSTOMER') {
+  if ((role === 'SUPER_ADMIN' || role === 'ADMIN') && allowedRole !== 'CUSTOMER') {
     return children;
   }
 

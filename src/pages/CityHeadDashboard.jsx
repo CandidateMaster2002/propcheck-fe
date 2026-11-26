@@ -133,7 +133,7 @@ export default function CityHeadDashboard() {
             </p>
           </div>
           <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
-            {role === 'ADMIN' && (
+            {(role === 'ADMIN' || role === 'SUPER_ADMIN') && (
               <button className="btn btn-secondary" onClick={() => navigate('/admin')}>🛡️ Admin Portal</button>
             )}
             {canValidate && (
