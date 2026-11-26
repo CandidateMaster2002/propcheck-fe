@@ -137,7 +137,6 @@ export default function CityHeadDashboard() {
               <button className="btn btn-primary" onClick={() => navigate('/validator')}>🔍 Validation Queue</button>
             )}
             <button className="btn btn-secondary" onClick={() => navigate('/schedule')}>🗓️ Schedule</button>
-            <button className="btn btn-secondary" onClick={() => navigate('/analytics')}>📊 Analytics</button>
             <button className="btn btn-secondary" onClick={() => navigate('/profile')}>Profile</button>
           </div>
         </header>

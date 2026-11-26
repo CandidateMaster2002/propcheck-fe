@@ -9,7 +9,6 @@ import Profile from './pages/Profile';
 import LeadDetail from './pages/LeadDetail';
 import BookingsPage from './pages/BookingsPage';
 import MyBookingsPage from './pages/MyBookingsPage';
-import AnalyticsDashboard from './pages/AnalyticsDashboard';
 import MasterSchedulePage from './pages/MasterSchedulePage';
 import CreateBookingPage from './pages/CreateBookingPage';
 import ProtectedRoute from './components/ProtectedRoute';
@@ -42,12 +41,6 @@ function App() {
       <Route path="/profile" element={
         <ProtectedRoute allowedRoles={['ADMIN', 'SALES', 'CITY_HEAD', 'CUSTOMER']}>
           <Profile />
-        </ProtectedRoute>
-      } />
-
-      <Route path="/analytics" element={
-        <ProtectedRoute allowedRoles={['ADMIN', 'SALES', 'CITY_HEAD']}>
-          <AnalyticsDashboard />
         </ProtectedRoute>
       } />
 
