@@ -3,6 +3,9 @@ import { useParams, useNavigate } from 'react-router-dom';
 import client from '../api/client';
 import { useAuth } from '../context/AuthContext';
 import { useToast } from '../context/ToastContext';
+import CreateBookingModal from '../components/bookings/CreateBookingModal';
+import AssignEngineerModal from '../components/bookings/AssignEngineerModal';
+import RescheduleBookingModal from '../components/bookings/RescheduleBookingModal';
 
 const formatDate = (isoString) => {
   if (!isoString) return '—';
@@ -89,6 +92,83 @@ export default function LeadDetail() {
   const [remarkInput, setRemarkInput] = useState('');
   const [savingRemark, setSavingRemark] = useState(false);
   const [sendingReport, setSendingReport] = useState(false);
+  const [actionLoading, setActionLoading] = useState(false);
+  const [bookingLeadTarget, setBookingLeadTarget] = useState(null);
+  const [assignEngineerTarget, setAssignEngineerTarget] = useState(null);
+  const [rescheduleTarget, setRescheduleTarget] = useState(null);
+
+  const fetchLead = async () => {
+    try {
+      const response = await client.get(`/leads/${id}`);
+      setLead(response.data);
+      setRemarkInput(response.data.remarks || '');
+    } catch (err) {
+      setError(err.response?.data?.error || 'Failed to load lead details');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchLead();
+  }, [id]);
+
+  const handleAction = async (action) => {
+    if (!lead) return;
+    const bookingId = lead.currentBookingId || lead.id;
+
+    if (action === 'BOOK') {
+      setBookingLeadTarget(lead);
+      return;
+    }
+
+    if (action === 'RESCHEDULE') {
+      setRescheduleTarget({
+        ...lead,
+        id: bookingId,
+        bookingType: lead.inspectionType || 'INSPECTION',
+      });
+      return;
+    }
+
+    if (action === 'ASSIGN_ENGINEER') {
+      const slotTimeStr = lead.inspectionDateAndTime
+        ? new Date(lead.inspectionDateAndTime).toLocaleTimeString('en-US', { hour12: false })
+        : '';
+      const assumedSlot = slotTimeStr && parseInt(slotTimeStr.split(':')[0], 10) >= 13 ? 'EVENING' : 'MORNING';
+      setAssignEngineerTarget({
+        ...lead,
+        id: bookingId,
+        leadId: lead.id,
+        date: lead.inspectionDateAndTime ? lead.inspectionDateAndTime.split('T')[0] : new Date().toISOString().split('T')[0],
+        slot: lead.slot || assumedSlot,
+      });
+      return;
+    }
+
+    setActionLoading(true);
+    try {
+      if (action === 'CANCEL') {
+        if (!window.confirm('Are you sure you want to cancel this booking?')) return;
+        await client.put(`/bookings/for-lead/${lead.id}/cancel`);
+        showToast('Booking cancelled.', 'success');
+      } else if (action === 'MARK_DONE') {
+        await client.put(`/bookings/for-lead/${lead.id}/mark-done`);
+        showToast('Inspection marked as done!', 'success');
+      } else if (action === 'MARK_VALIDATION_DONE') {
+        await client.put(`/bookings/for-lead/${lead.id}/mark-validation-done`);
+        showToast('Validation marked as done!', 'success');
+      } else if (action === 'REPORT_SENT') {
+        await handleSendReport();
+        return;
+      }
+      await fetchLead();
+    } catch (err) {
+      showToast(err.response?.data?.error || err.response?.data?.message || 'Action failed', 'error');
+    } finally {
+      setActionLoading(false);
+    }
+  };
 
   const handleSendReport = async () => {
     if (!window.confirm(`Send official inspection report to ${lead.customerName || 'customer'} via email and unlock on their portal?`)) return;
@@ -107,21 +187,6 @@ export default function LeadDetail() {
       setSendingReport(false);
     }
   };
-
-  useEffect(() => {
-    const fetchLead = async () => {
-      try {
-        const response = await client.get(`/leads/${id}`);
-        setLead(response.data);
-        setRemarkInput(response.data.remarks || '');
-      } catch (err) {
-        setError(err.response?.data?.error || 'Failed to load lead details');
-      } finally {
-        setLoading(false);
-      }
-    };
-    fetchLead();
-  }, [id]);
 
   const handleSaveRemark = async () => {
     setSavingRemark(true);
@@ -200,6 +265,61 @@ export default function LeadDetail() {
           </div>
         </div>
 
+        {/* 1.5 Booking Status & Quick Actions (matches outside table actions) */}
+        {(() => {
+          const bookingStatus = lead.currentBookingStatus || 'NOT_SCHEDULED';
+          const isUnbooked = !lead.currentBookingStatus || bookingStatus === 'UNBOOKED' || bookingStatus === 'NOT_SCHEDULED';
+          const isLocked = bookingStatus === 'REPORT_SENT' || bookingStatus === 'CANCELLED' || bookingStatus === 'POSTPONED_CANCELLED' || lead.paymentStatus === 'Refunded';
+          return (
+            <div className="card" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '1rem', marginBottom: '1.5rem' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', flexWrap: 'wrap' }}>
+                <span style={{ fontSize: '0.875rem', fontWeight: 600, color: 'var(--text-muted)' }}>Booking Status:</span>
+                <StatusBadge status={bookingStatus} />
+              </div>
+
+              {!isLocked && (
+                <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
+                  {isUnbooked && (
+                    <button type="button" className="btn btn-primary" disabled={actionLoading} onClick={() => handleAction('BOOK')}>
+                      📅 Book Inspection
+                    </button>
+                  )}
+                  {(bookingStatus === 'POSTPONED' || bookingStatus === 'PENDING_APPROVAL' || bookingStatus === 'PENDING_ENGINEER_ASSIGNMENT' || bookingStatus === 'CONFIRMED' || bookingStatus === 'CONFLICT') && (
+                    <button type="button" className="btn btn-secondary" disabled={actionLoading} onClick={() => handleAction('RESCHEDULE')}>
+                      🗓️ Change Date
+                    </button>
+                  )}
+                  {bookingStatus === 'PENDING_ENGINEER_ASSIGNMENT' && role !== 'SALES' && (
+                    <button type="button" className="btn btn-primary" disabled={actionLoading} onClick={() => handleAction('ASSIGN_ENGINEER')}>
+                      👷 Allot Engineer
+                    </button>
+                  )}
+                  {(bookingStatus === 'CONFIRMED' || bookingStatus === 'CONFLICT') && role !== 'SALES' && (
+                    <button type="button" className="btn btn-primary" disabled={actionLoading} onClick={() => handleAction('MARK_DONE')} style={{ backgroundColor: '#059669', borderColor: '#059669' }}>
+                      ✅ Mark Inspection Done
+                    </button>
+                  )}
+                  {bookingStatus === 'INSPECTION_DONE' && role !== 'SALES' && (
+                    <button type="button" className="btn btn-primary" disabled={actionLoading} onClick={() => handleAction('MARK_VALIDATION_DONE')} style={{ backgroundColor: '#059669', borderColor: '#059669' }}>
+                      ✓ Mark Validation Done
+                    </button>
+                  )}
+                  {(bookingStatus === 'INSPECTION_DONE' || bookingStatus === 'VALIDATION_DONE') && role !== 'SALES' && (
+                    <button type="button" className="btn btn-primary" disabled={actionLoading || sendingReport} onClick={() => handleAction('REPORT_SENT')}>
+                      ✉️ Send Report
+                    </button>
+                  )}
+                  {(bookingStatus === 'PENDING_APPROVAL' || ((bookingStatus === 'PENDING_ENGINEER_ASSIGNMENT' || bookingStatus === 'CONFIRMED' || bookingStatus === 'CONFLICT') && role !== 'SALES')) && (
+                    <button type="button" className="btn btn-secondary" disabled={actionLoading} onClick={() => handleAction('CANCEL')} style={{ border: '1px solid #fecaca', color: '#b91c1c' }}>
+                      ❌ Cancel
+                    </button>
+                  )}
+                </div>
+              )}
+            </div>
+          );
+        })()}
+
         {/* 2. Inspection Details */}
         <div className="card">
           <h2 style={{ marginBottom: '1.5rem', fontSize: '1.25rem' }}>Inspection Details</h2>
@@ -217,7 +337,7 @@ export default function LeadDetail() {
           </div>
           
           <div style={{ marginTop: '1.5rem', borderTop: '1px solid var(--border-color)', paddingTop: '1.5rem' }}>
-            {['CITY_HEAD', 'SALES', 'ADMIN'].includes(role) ? (
+            {['CITY_HEAD', 'SALES', 'ADMIN', 'SUPER_ADMIN'].includes(role) ? (
               <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
                 <label style={{ fontSize: '0.875rem', color: 'var(--text-muted)' }}>Remarks / Notes</label>
                 <textarea 
@@ -346,6 +466,30 @@ export default function LeadDetail() {
         </div>
 
       </div>
+
+      {bookingLeadTarget && (
+        <CreateBookingModal
+          lead={bookingLeadTarget}
+          onClose={() => setBookingLeadTarget(null)}
+          onSuccess={fetchLead}
+        />
+      )}
+
+      {assignEngineerTarget && (
+        <AssignEngineerModal
+          booking={assignEngineerTarget}
+          onClose={() => setAssignEngineerTarget(null)}
+          onSuccess={fetchLead}
+        />
+      )}
+
+      {rescheduleTarget && (
+        <RescheduleBookingModal
+          booking={rescheduleTarget}
+          onClose={() => setRescheduleTarget(null)}
+          onSuccess={fetchLead}
+        />
+      )}
     </div>
   );
 }
