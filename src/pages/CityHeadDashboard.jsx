@@ -10,7 +10,7 @@ import AssignEngineerModal from '../components/bookings/AssignEngineerModal';
 import RescheduleBookingModal from '../components/bookings/RescheduleBookingModal';
 
 export default function CityHeadDashboard() {
-  const { logout, name, city, id: userId, canValidate } = useAuth();
+  const { logout, name, city, id: userId, role, canValidate } = useAuth();
   const navigate = useNavigate();
 
   const [leads, setLeads] = useState([]);
@@ -133,6 +133,9 @@ export default function CityHeadDashboard() {
             </p>
           </div>
           <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
+            {role === 'ADMIN' && (
+              <button className="btn btn-secondary" onClick={() => navigate('/admin')}>🛡️ Admin Portal</button>
+            )}
             {canValidate && (
               <button className="btn btn-primary" onClick={() => navigate('/validator')}>🔍 Validation Queue</button>
             )}

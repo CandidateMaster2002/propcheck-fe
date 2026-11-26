@@ -313,8 +313,6 @@ export default function AdminDashboard() {
             </p>
           </div>
           <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
-            <button className="btn btn-primary" onClick={() => navigate('/validator')}>🔍 Validation Queue</button>
-            <button className="btn btn-secondary" onClick={() => navigate('/schedule')}>🗓️ Schedule</button>
             <button className="btn btn-secondary" onClick={() => navigate('/profile')}>Profile</button>
             <button
               className="btn btn-secondary"
@@ -325,6 +323,87 @@ export default function AdminDashboard() {
             </button>
           </div>
         </header>
+
+        {/* Admin All-Access Workspaces */}
+        <div
+          style={{
+            display: 'grid',
+            gridTemplateColumns: 'repeat(auto-fit, minmax(210px, 1fr))',
+            gap: '1rem',
+            marginBottom: '1.5rem',
+          }}
+        >
+          {[
+            {
+              title: 'Sales & Leads',
+              desc: 'Sync Zoho leads, book & approve inspections',
+              icon: '💼',
+              path: '/sales',
+              bg: '#fef3c7',
+              color: '#92400e',
+            },
+            {
+              title: 'City Lead Ops',
+              desc: 'Assign engineers, resolve conflicts & reschedule',
+              icon: '🏙️',
+              path: '/cityhead',
+              bg: '#dbeafe',
+              color: '#1d4ed8',
+            },
+            {
+              title: 'Validation & Reports',
+              desc: 'Review completed inspections & approve QC',
+              icon: '🔍',
+              path: '/validator',
+              bg: '#dcfce7',
+              color: '#166534',
+            },
+            {
+              title: 'Master Schedule',
+              desc: 'Calendar slots, bookings & dispatch reports',
+              icon: '🗓️',
+              path: '/schedule',
+              bg: '#ede9fe',
+              color: '#5b21b6',
+            },
+          ].map((ws) => (
+            <button
+              key={ws.path}
+              type="button"
+              onClick={() => navigate(ws.path)}
+              className="card"
+              style={{
+                margin: 0,
+                padding: '1.1rem 1.25rem',
+                textAlign: 'left',
+                cursor: 'pointer',
+                border: '1px solid #e2e8f0',
+                transition: 'transform 0.15s ease, box-shadow 0.15s ease',
+              }}
+            >
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '0.5rem' }}>
+                <span
+                  style={{
+                    width: '36px',
+                    height: '36px',
+                    borderRadius: '0.6rem',
+                    background: ws.bg,
+                    color: ws.color,
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    fontSize: '1.15rem',
+                  }}
+                >
+                  {ws.icon}
+                </span>
+                <span style={{ fontSize: '0.85rem', color: 'var(--primary-color)', fontWeight: 600 }}>Open →</span>
+              </div>
+              <div style={{ fontWeight: 700, fontSize: '1rem', color: '#0f172a' }}>{ws.title}</div>
+              <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)', marginTop: '0.25rem' }}>{ws.desc}</div>
+            </button>
+          ))}
+        </div>
 
         {/* Summary KPI Strip */}
         <div

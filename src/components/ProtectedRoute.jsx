@@ -16,6 +16,10 @@ export default function ProtectedRoute({ allowedRole, allowedRoles, requireValid
     return children;
   }
 
+  if (role === 'ADMIN' && allowedRole !== 'CUSTOMER') {
+    return children;
+  }
+
   if (!roles.includes(role)) {
     return <Navigate to="/login" replace />;
   }
