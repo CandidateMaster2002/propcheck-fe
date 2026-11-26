@@ -2,7 +2,6 @@ import { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import client from '../api/client';
-import InspectionReportView from '../components/reports/InspectionReportView';
 
 // Status colour map for bookings shown in validator queue
 const STATUS_COLORS = {
@@ -251,7 +250,7 @@ export default function ValidatorDashboard() {
                     <td style={{ padding: '12px 14px' }}>
                       <div style={{ display: 'flex', gap: 8 }}>
                         <button
-                          onClick={() => setSelectedReportBooking(bk)}
+                          onClick={() => navigate(`/reports/${bk.id}`, { state: { booking: bk } })}
                           style={{
                             padding: '6px 14px', borderRadius: 6, border: '1px solid #2563eb',
                             background: '#eff6ff', color: '#1d4ed8',
@@ -270,30 +269,6 @@ export default function ValidatorDashboard() {
           </div>
         )}
       </div>
-
-      {/* ── Interactive Inspection Report Modal ── */}
-      {selectedReportBooking && (
-        <div style={{
-          position: 'fixed',
-          inset: 0,
-          backgroundColor: 'rgba(15, 23, 42, 0.75)',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          zIndex: 1000,
-          padding: '1.5rem',
-          backdropFilter: 'blur(4px)'
-        }}>
-          <div style={{ width: '100%', maxWidth: '1100px', maxHeight: '92vh', overflowY: 'auto', borderRadius: '0.75rem' }}>
-            <InspectionReportView
-              booking={selectedReportBooking}
-              isValidator={true}
-              onClose={() => setSelectedReportBooking(null)}
-              onValidate={handleValidate}
-            />
-          </div>
-        </div>
-      )}
 
     </div>
   );

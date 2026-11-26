@@ -6,7 +6,6 @@ import client from '../api/client';
 import { BookingStatusBadge, SlotBadge, BookingTypeBadge } from '../components/bookings/BookingStatusBadge';
 import RescheduleBookingModal from '../components/bookings/RescheduleBookingModal';
 import CreateBookingModal from '../components/bookings/CreateBookingModal';
-import InspectionReportView from '../components/reports/InspectionReportView';
 
 const FRIENDLY_STATUS = {
   PENDING_APPROVAL: { label: 'Under Review', desc: 'Our team will confirm shortly.', color: '#c2410c', bg: '#fff7ed' },
@@ -29,7 +28,6 @@ export default function MyBookingsPage() {
   const [myLead, setMyLead] = useState(null);
   const [rescheduleTarget, setRescheduleTarget] = useState(null);
   const [bookingLeadTarget, setBookingLeadTarget] = useState(null);
-  const [selectedReportBooking, setSelectedReportBooking] = useState(null);
 
   const fetchBookings = useCallback(async () => {
     setLoading(true);
@@ -172,7 +170,7 @@ export default function MyBookingsPage() {
                         <button 
                           className="btn btn-primary" 
                           style={{ fontSize: '0.8125rem', padding: '0.45rem 1.1rem', backgroundColor: '#047857', borderColor: '#047857' }}
-                          onClick={() => setSelectedReportBooking(b)}
+                          onClick={() => navigate(`/reports/${b.id}`, { state: { booking: b } })}
                         >
                           📋 View Inspection Report
                         </button>
@@ -208,28 +206,6 @@ export default function MyBookingsPage() {
           onClose={() => setBookingLeadTarget(null)}
           onSuccess={fetchBookings}
         />
-      )}
-
-      {selectedReportBooking && (
-        <div style={{
-          position: 'fixed',
-          inset: 0,
-          backgroundColor: 'rgba(15, 23, 42, 0.75)',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          zIndex: 1000,
-          padding: '1.5rem',
-          backdropFilter: 'blur(4px)'
-        }}>
-          <div style={{ width: '100%', maxWidth: '1100px', maxHeight: '92vh', overflowY: 'auto', borderRadius: '0.75rem' }}>
-            <InspectionReportView
-              booking={selectedReportBooking}
-              isValidator={false}
-              onClose={() => setSelectedReportBooking(null)}
-            />
-          </div>
-        </div>
       )}
     </div>
   );

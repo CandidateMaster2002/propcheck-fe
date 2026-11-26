@@ -3,7 +3,6 @@ import { useParams, useNavigate } from 'react-router-dom';
 import client from '../api/client';
 import { useAuth } from '../context/AuthContext';
 import { useToast } from '../context/ToastContext';
-import InspectionReportView from '../components/reports/InspectionReportView';
 
 const formatDate = (isoString) => {
   if (!isoString) return '—';
@@ -89,7 +88,6 @@ export default function LeadDetail() {
   
   const [remarkInput, setRemarkInput] = useState('');
   const [savingRemark, setSavingRemark] = useState(false);
-  const [showReportModal, setShowReportModal] = useState(false);
   const [sendingReport, setSendingReport] = useState(false);
 
   const handleSendReport = async () => {
@@ -262,7 +260,7 @@ export default function LeadDetail() {
                 <button
                   type="button"
                   className="btn btn-primary"
-                  onClick={() => setShowReportModal(true)}
+                  onClick={() => navigate(`/reports/${lead.currentBookingId || lead.id}`, { state: { booking: lead } })}
                   style={{ backgroundColor: '#059669', borderColor: '#059669' }}
                 >
                   📋 View Inspection Report & Snags
@@ -348,28 +346,6 @@ export default function LeadDetail() {
         </div>
 
       </div>
-
-      {showReportModal && (
-        <div style={{
-          position: 'fixed',
-          inset: 0,
-          backgroundColor: 'rgba(15, 23, 42, 0.75)',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          zIndex: 1000,
-          padding: '1.5rem',
-          backdropFilter: 'blur(4px)'
-        }}>
-          <div style={{ width: '100%', maxWidth: '1100px', maxHeight: '92vh', overflowY: 'auto', borderRadius: '0.75rem' }}>
-            <InspectionReportView
-              booking={lead}
-              isValidator={role === 'VALIDATOR'}
-              onClose={() => setShowReportModal(false)}
-            />
-          </div>
-        </div>
-      )}
     </div>
   );
 }

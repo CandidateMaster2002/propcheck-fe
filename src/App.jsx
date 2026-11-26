@@ -11,6 +11,7 @@ import BookingsPage from './pages/BookingsPage';
 import MyBookingsPage from './pages/MyBookingsPage';
 import MasterSchedulePage from './pages/MasterSchedulePage';
 import CreateBookingPage from './pages/CreateBookingPage';
+import InspectionReportPage from './pages/InspectionReportPage';
 import ProtectedRoute from './components/ProtectedRoute';
 import DevApiToggle from './components/DevApiToggle';
 
@@ -36,6 +37,11 @@ function App() {
       } />
       <Route path="/validator" element={
         <ProtectedRoute requireValidator><ValidatorDashboard /></ProtectedRoute>
+      } />
+      <Route path="/reports/:bookingId" element={
+        <ProtectedRoute allowedRoles={['ADMIN', 'SUPER_ADMIN', 'SALES', 'CITY_HEAD', 'VALIDATOR', 'CUSTOMER']}>
+          <InspectionReportPage />
+        </ProtectedRoute>
       } />
 
       <Route path="/profile" element={
