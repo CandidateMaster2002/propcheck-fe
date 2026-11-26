@@ -8,6 +8,8 @@ import ConflictWidget from '../components/bookings/ConflictWidget';
 import CreateBookingModal from '../components/bookings/CreateBookingModal';
 import AssignEngineerModal from '../components/bookings/AssignEngineerModal';
 import RescheduleBookingModal from '../components/bookings/RescheduleBookingModal';
+import DateFilterControl from '../components/DateFilterControl';
+import { filterLeadsByDate, getDefaultDatePresetForStatus, getTodayYmd } from '../utils/leadDateFilter';
 
 function AddUserModal({ isSuperAdmin, onClose, onSuccess }) {
   const [userType, setUserType] = useState('SALES');
@@ -272,6 +274,10 @@ export default function AdminDashboard() {
   const [selectedCity, setSelectedCity] = useState('');
   const [ownerFilter, setOwnerFilter] = useState('All');
   const [bookingFilter, setBookingFilter] = useState('ALL');
+  const [datePreset, setDatePreset] = useState('ALL');
+  const [customDate, setCustomDate] = useState(getTodayYmd());
+  const [rangeStart, setRangeStart] = useState(getTodayYmd());
+  const [rangeEnd, setRangeEnd] = useState(getTodayYmd());
   const [bookingLeadTarget, setBookingLeadTarget] = useState(null);
   const [assignEngineerTarget, setAssignEngineerTarget] = useState(null);
   const [rescheduleTarget, setRescheduleTarget] = useState(null);
@@ -280,6 +286,18 @@ export default function AdminDashboard() {
   const [syncError, setSyncError] = useState('');
 
   const salesUsers = useMemo(() => users.filter((u) => u.role === 'SALES'), [users]);
+
+  const displayedLeads = useMemo(
+    () =>
+      filterLeadsByDate(leads, {
+        bookingFilter,
+        datePreset,
+        customDate,
+        rangeStart,
+        rangeEnd,
+      }),
+    [leads, bookingFilter, datePreset, customDate, rangeStart, rangeEnd]
+  );
 
   useEffect(() => {
     const handler = setTimeout(() => setDebouncedSearch(searchQuery), 400);
@@ -570,7 +588,11 @@ export default function AdminDashboard() {
                   <label style={{ fontSize: '0.875rem', fontWeight: 500, color: 'var(--text-muted)' }}>Booking Status</label>
                   <select
                     value={bookingFilter}
-                    onChange={(e) => setBookingFilter(e.target.value)}
+                    onChange={(e) => {
+                      const next = e.target.value;
+                      setBookingFilter(next);
+                      setDatePreset(getDefaultDatePresetForStatus(next));
+                    }}
                     style={{ padding: '0.6rem', borderRadius: '0.5rem', border: '1px solid var(--border-color)' }}
                   >
                     <option value="ALL">All Leads</option>
@@ -583,10 +605,22 @@ export default function AdminDashboard() {
                     <option value="POSTPONED_CANCELLED">Postponed / Cancelled</option>
                   </select>
                 </div>
+
+                <DateFilterControl
+                  bookingFilter={bookingFilter}
+                  datePreset={datePreset}
+                  setDatePreset={setDatePreset}
+                  customDate={customDate}
+                  setCustomDate={setCustomDate}
+                  rangeStart={rangeStart}
+                  setRangeStart={setRangeStart}
+                  rangeEnd={rangeEnd}
+                  setRangeEnd={setRangeEnd}
+                />
               </div>
 
               <LeadsTable
-                leads={leads}
+                leads={displayedLeads}
                 users={users}
                 loading={loadingLeads}
                 emptyMessage={`No leads found for ${selectedCity || 'All Cities'}.`}

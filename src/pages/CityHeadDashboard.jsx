@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import client from '../api/client';
@@ -8,6 +8,8 @@ import CreateBookingModal from '../components/bookings/CreateBookingModal';
 
 import AssignEngineerModal from '../components/bookings/AssignEngineerModal';
 import RescheduleBookingModal from '../components/bookings/RescheduleBookingModal';
+import DateFilterControl from '../components/DateFilterControl';
+import { filterLeadsByDate, getDefaultDatePresetForStatus, getTodayYmd } from '../utils/leadDateFilter';
 
 export default function CityHeadDashboard() {
   const { logout, name, city, id: userId, role, canValidate } = useAuth();
@@ -16,6 +18,10 @@ export default function CityHeadDashboard() {
   const [leads, setLeads] = useState([]);
   const [searchQuery, setSearchQuery] = useState('');
   const [bookingFilter, setBookingFilter] = useState('ALL');
+  const [datePreset, setDatePreset] = useState('ALL');
+  const [customDate, setCustomDate] = useState(getTodayYmd());
+  const [rangeStart, setRangeStart] = useState(getTodayYmd());
+  const [rangeEnd, setRangeEnd] = useState(getTodayYmd());
   const [debouncedSearch, setDebouncedSearch] = useState('');
   const [bookingLeadTarget, setBookingLeadTarget] = useState(null);
   
@@ -29,6 +35,18 @@ export default function CityHeadDashboard() {
   const salesUsers = allUsers.filter(u => u.role === 'SALES');
 
   const [loadingLeads, setLoadingLeads] = useState(false);
+
+  const displayedLeads = useMemo(
+    () =>
+      filterLeadsByDate(leads, {
+        bookingFilter,
+        datePreset,
+        customDate,
+        rangeStart,
+        rangeEnd,
+      }),
+    [leads, bookingFilter, datePreset, customDate, rangeStart, rangeEnd]
+  );
 
   useEffect(() => {
     const fetchUsers = async () => {
@@ -221,7 +239,11 @@ export default function CityHeadDashboard() {
               <label style={{ fontSize: '0.875rem', fontWeight: 500, color: 'var(--text-muted)' }}>Booking Status</label>
               <select
                 value={bookingFilter}
-                onChange={(e) => setBookingFilter(e.target.value)}
+                onChange={(e) => {
+                  const next = e.target.value;
+                  setBookingFilter(next);
+                  setDatePreset(getDefaultDatePresetForStatus(next));
+                }}
                 style={{ padding: '0.6rem', borderRadius: '0.5rem', border: '1px solid var(--border-color)' }}
               >
                 <option value="ALL">All Leads</option>
@@ -234,10 +256,22 @@ export default function CityHeadDashboard() {
                 <option value="POSTPONED_CANCELLED">Postponed / Cancelled</option>
               </select>
             </div>
+
+            <DateFilterControl
+              bookingFilter={bookingFilter}
+              datePreset={datePreset}
+              setDatePreset={setDatePreset}
+              customDate={customDate}
+              setCustomDate={setCustomDate}
+              rangeStart={rangeStart}
+              setRangeStart={setRangeStart}
+              rangeEnd={rangeEnd}
+              setRangeEnd={setRangeEnd}
+            />
           </div>
 
           <LeadsTable 
-            leads={leads}
+            leads={displayedLeads}
             users={allUsers}
             loading={loadingLeads} 
             emptyMessage={`No leads found for ${selectedCity || 'All Cities'}.`}
