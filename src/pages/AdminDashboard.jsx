@@ -3,6 +3,11 @@ import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import client from '../api/client';
 import EditUserModal from '../components/EditUserModal';
+import LeadsTable from '../components/LeadsTable';
+import ConflictWidget from '../components/bookings/ConflictWidget';
+import CreateBookingModal from '../components/bookings/CreateBookingModal';
+import AssignEngineerModal from '../components/bookings/AssignEngineerModal';
+import RescheduleBookingModal from '../components/bookings/RescheduleBookingModal';
 
 function AddUserModal({ isSuperAdmin, onClose, onSuccess }) {
   const [userType, setUserType] = useState('SALES');
@@ -249,6 +254,109 @@ export default function AdminDashboard() {
   const [showAddModal, setShowAddModal] = useState(false);
   const [search, setSearch] = useState('');
   const [roleFilter, setRoleFilter] = useState('ALL');
+  const [activeTab, setActiveTab] = useState('operations');
+
+  // Operations (City Lead + Sales + Validator all-access) state
+  const [leads, setLeads] = useState([]);
+  const [loadingLeads, setLoadingLeads] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [debouncedSearch, setDebouncedSearch] = useState('');
+  const [selectedCity, setSelectedCity] = useState('');
+  const [ownerFilter, setOwnerFilter] = useState('All');
+  const [bookingFilter, setBookingFilter] = useState('ALL');
+  const [bookingLeadTarget, setBookingLeadTarget] = useState(null);
+  const [assignEngineerTarget, setAssignEngineerTarget] = useState(null);
+  const [rescheduleTarget, setRescheduleTarget] = useState(null);
+  const [syncing, setSyncing] = useState(false);
+  const [syncMessage, setSyncMessage] = useState('');
+  const [syncError, setSyncError] = useState('');
+
+  const salesUsers = useMemo(() => users.filter((u) => u.role === 'SALES'), [users]);
+
+  useEffect(() => {
+    const handler = setTimeout(() => setDebouncedSearch(searchQuery), 400);
+    return () => clearTimeout(handler);
+  }, [searchQuery]);
+
+  const fetchLeads = useCallback(async () => {
+    setLoadingLeads(true);
+    try {
+      const params = new URLSearchParams();
+      if (selectedCity) params.append('city', selectedCity);
+      if (debouncedSearch) params.append('search', debouncedSearch);
+      params.append('bookingFilter', bookingFilter);
+      if (ownerFilter !== 'All') params.append('owner', ownerFilter);
+
+      const response = await client.get(`/leads?${params.toString()}`);
+      setLeads(response.data || []);
+    } catch (err) {
+      console.error('Failed to fetch leads', err);
+    } finally {
+      setLoadingLeads(false);
+    }
+  }, [selectedCity, debouncedSearch, bookingFilter, ownerFilter]);
+
+  useEffect(() => {
+    fetchLeads();
+  }, [fetchLeads]);
+
+  const handleSync = async () => {
+    setSyncing(true);
+    setSyncMessage('');
+    setSyncError('');
+    try {
+      const res = await client.post('/leads/sync');
+      setSyncMessage(res.data?.message || 'Leads synced from Zoho.');
+      fetchLeads();
+    } catch (err) {
+      setSyncError(err.response?.data?.error || 'Failed to sync Zoho leads.');
+    } finally {
+      setSyncing(false);
+    }
+  };
+
+  const handleLeadAction = async (action, lead) => {
+    const bookingId = lead.currentBookingId || lead.id;
+
+    if (action === 'RESCHEDULE') {
+      setRescheduleTarget({
+        ...lead,
+        id: bookingId,
+        bookingType: lead.inspectionType || 'INSPECTION',
+      });
+      return;
+    }
+
+    if (action === 'ASSIGN_ENGINEER') {
+      const slotTimeStr = lead.inspectionDateAndTime
+        ? new Date(lead.inspectionDateAndTime).toLocaleTimeString('en-US', { hour12: false })
+        : '';
+      const assumedSlot = slotTimeStr && parseInt(slotTimeStr.split(':')[0], 10) >= 13 ? 'EVENING' : 'MORNING';
+      setAssignEngineerTarget({
+        ...lead,
+        id: bookingId,
+        leadId: lead.id,
+        date: lead.inspectionDateAndTime ? lead.inspectionDateAndTime.split('T')[0] : new Date().toISOString().split('T')[0],
+        slot: lead.slot || assumedSlot,
+      });
+      return;
+    }
+
+    try {
+      if (action === 'CANCEL') {
+        await client.put(`/bookings/for-lead/${lead.id}/cancel`);
+      } else if (action === 'MARK_DONE') {
+        await client.put(`/bookings/for-lead/${lead.id}/mark-done`);
+      } else if (action === 'MARK_VALIDATION_DONE') {
+        await client.put(`/bookings/for-lead/${lead.id}/mark-validation-done`);
+      } else if (action === 'REPORT_SENT') {
+        await client.put(`/bookings/for-lead/${lead.id}/report-sent`);
+      }
+      fetchLeads();
+    } catch (err) {
+      alert(err.response?.data?.error || err.response?.data?.message || 'Action failed.');
+    }
+  };
 
   const fetchUsers = useCallback(async () => {
     setTableLoading(true);
@@ -323,6 +431,8 @@ export default function AdminDashboard() {
             </p>
           </div>
           <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
+            <button className="btn btn-primary" onClick={() => navigate('/validator')}>🔍 Validation Queue</button>
+            <button className="btn btn-secondary" onClick={() => navigate('/schedule')}>🗓️ Schedule</button>
             <button className="btn btn-secondary" onClick={() => navigate('/profile')}>Profile</button>
             <button
               className="btn btn-secondary"
@@ -334,86 +444,154 @@ export default function AdminDashboard() {
           </div>
         </header>
 
-        {/* Admin All-Access Workspaces */}
-        <div
-          style={{
-            display: 'grid',
-            gridTemplateColumns: 'repeat(auto-fit, minmax(210px, 1fr))',
-            gap: '1rem',
-            marginBottom: '1.5rem',
-          }}
-        >
-          {[
-            {
-              title: 'Sales & Leads',
-              desc: 'Sync Zoho leads, book & approve inspections',
-              icon: '💼',
-              path: '/sales',
-              bg: '#fef3c7',
-              color: '#92400e',
-            },
-            {
-              title: 'City Lead Ops',
-              desc: 'Assign engineers, resolve conflicts & reschedule',
-              icon: '🏙️',
-              path: '/cityhead',
-              bg: '#dbeafe',
-              color: '#1d4ed8',
-            },
-            {
-              title: 'Validation & Reports',
-              desc: 'Review completed inspections & approve QC',
-              icon: '🔍',
-              path: '/validator',
-              bg: '#dcfce7',
-              color: '#166534',
-            },
-            {
-              title: 'Master Schedule',
-              desc: 'Calendar slots, bookings & dispatch reports',
-              icon: '🗓️',
-              path: '/schedule',
-              bg: '#ede9fe',
-              color: '#5b21b6',
-            },
-          ].map((ws) => (
-            <button
-              key={ws.path}
-              type="button"
-              onClick={() => navigate(ws.path)}
-              className="card"
-              style={{
-                margin: 0,
-                padding: '1.1rem 1.25rem',
-                textAlign: 'left',
-                cursor: 'pointer',
-                border: '1px solid #e2e8f0',
-                transition: 'transform 0.15s ease, box-shadow 0.15s ease',
-              }}
-            >
-              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '0.5rem' }}>
-                <span
-                  style={{
-                    width: '36px',
-                    height: '36px',
-                    borderRadius: '0.6rem',
-                    background: ws.bg,
-                    color: ws.color,
-                    display: 'inline-flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    fontSize: '1.15rem',
-                  }}
-                >
-                  {ws.icon}
-                </span>
-                <span style={{ fontSize: '0.85rem', color: 'var(--primary-color)', fontWeight: 600 }}>Open →</span>
-              </div>
-              <div style={{ fontWeight: 700, fontSize: '1rem', color: '#0f172a' }}>{ws.title}</div>
-              <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)', marginTop: '0.25rem' }}>{ws.desc}</div>
-            </button>
-          ))}
+        {/* Clean Tab Switcher: Operations (City Lead + All Rights) vs Team & Permissions */}
+        <div style={{ display: 'flex', gap: '0.75rem', marginBottom: '1.25rem', flexWrap: 'wrap' }}>
+          <button
+            type="button"
+            onClick={() => setActiveTab('operations')}
+            className={`btn ${activeTab === 'operations' ? 'btn-primary' : 'btn-secondary'}`}
+          >
+            📋 Operations (All Cities)
+          </button>
+          <button
+            type="button"
+            onClick={() => setActiveTab('team')}
+            className={`btn ${activeTab === 'team' ? 'btn-primary' : 'btn-secondary'}`}
+          >
+            👥 Team & Permissions ({users.length})
+          </button>
         </div>
+
+        {activeTab === 'operations' && (
+          <>
+            <ConflictWidget city={selectedCity} />
+
+            <div className="card">
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.25rem', flexWrap: 'wrap', gap: '1rem' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+                  <h2 style={{ marginBottom: 0 }}>Customers & Leads</h2>
+                  <button
+                    className="btn btn-secondary"
+                    onClick={fetchLeads}
+                    disabled={loadingLeads}
+                    style={{ padding: '0.3rem 0.75rem', fontSize: '0.875rem' }}
+                  >
+                    {loadingLeads ? '...' : 'Refresh'}
+                  </button>
+                </div>
+                <button
+                  className="btn btn-primary"
+                  onClick={handleSync}
+                  disabled={syncing}
+                >
+                  {syncing ? 'Syncing...' : '🔄 Sync Zoho Leads'}
+                </button>
+              </div>
+
+              {syncMessage && (
+                <div style={{ marginBottom: '1rem', padding: '0.75rem 1rem', borderRadius: '0.5rem', background: '#ecfdf5', color: '#047857', border: '1px solid #a7f3d0', fontSize: '0.875rem' }}>
+                  ✅ {syncMessage}
+                </div>
+              )}
+              {syncError && (
+                <div style={{ marginBottom: '1rem', padding: '0.75rem 1rem', borderRadius: '0.5rem', background: '#fef2f2', color: '#b91c1c', border: '1px solid #fecaca', fontSize: '0.875rem' }}>
+                  {syncError}
+                </div>
+              )}
+
+              {/* Filters Panel (same as City Lead, defaulting to All Cities) */}
+              <div style={{
+                display: 'grid',
+                gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
+                gap: '1rem',
+                marginBottom: '1rem',
+                background: 'var(--background-color, #f9fafb)',
+                padding: '1.25rem',
+                borderRadius: '0.5rem',
+                border: '1px solid var(--border-color)',
+              }}>
+                <div style={{ gridColumn: '1 / -1' }}>
+                  <input
+                    type="text"
+                    placeholder="Search by customer name, email, or phone..."
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    style={{
+                      width: '100%',
+                      padding: '0.75rem 1rem',
+                      borderRadius: '0.5rem',
+                      border: '1px solid var(--border-color)',
+                      boxSizing: 'border-box',
+                    }}
+                  />
+                </div>
+
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '0.35rem' }}>
+                  <label style={{ fontSize: '0.875rem', fontWeight: 500, color: 'var(--text-muted)' }}>City</label>
+                  <select
+                    value={selectedCity}
+                    onChange={(e) => setSelectedCity(e.target.value)}
+                    style={{ padding: '0.6rem', borderRadius: '0.5rem', border: '1px solid var(--border-color)' }}
+                  >
+                    <option value="">All Cities</option>
+                    <option value="Hyderabad">Hyderabad</option>
+                    <option value="Bangalore">Bangalore</option>
+                    <option value="Pune">Pune</option>
+                    <option value="Mumbai">Mumbai</option>
+                    <option value="Delhi NCR">Delhi NCR</option>
+                    <option value="Chennai">Chennai</option>
+                    <option value="Others">Others</option>
+                  </select>
+                </div>
+
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '0.35rem' }}>
+                  <label style={{ fontSize: '0.875rem', fontWeight: 500, color: 'var(--text-muted)' }}>Lead Owner</label>
+                  <select
+                    value={ownerFilter}
+                    onChange={(e) => setOwnerFilter(e.target.value)}
+                    style={{ padding: '0.6rem', borderRadius: '0.5rem', border: '1px solid var(--border-color)' }}
+                  >
+                    <option value="All">All</option>
+                    {salesUsers.map((u) => (
+                      <option key={u.id} value={u.name}>{u.name}</option>
+                    ))}
+                  </select>
+                </div>
+
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '0.35rem' }}>
+                  <label style={{ fontSize: '0.875rem', fontWeight: 500, color: 'var(--text-muted)' }}>Booking Status</label>
+                  <select
+                    value={bookingFilter}
+                    onChange={(e) => setBookingFilter(e.target.value)}
+                    style={{ padding: '0.6rem', borderRadius: '0.5rem', border: '1px solid var(--border-color)' }}
+                  >
+                    <option value="ALL">All Leads</option>
+                    <option value="UNBOOKED">Unbooked (Never booked)</option>
+                    <option value="PENDING_ENGINEER">Date Allotted (Engineer Not Allotted)</option>
+                    <option value="ENGINEER_ALLOTTED">Engineer Allotted</option>
+                    <option value="INSPECTION_DONE">Inspection Done</option>
+                    <option value="VALIDATION_DONE">Validation Done</option>
+                    <option value="REPORT_SENT">Report Sent</option>
+                    <option value="POSTPONED_CANCELLED">Postponed / Cancelled</option>
+                  </select>
+                </div>
+              </div>
+
+              <LeadsTable
+                leads={leads}
+                users={users}
+                loading={loadingLeads}
+                emptyMessage={`No leads found for ${selectedCity || 'All Cities'}.`}
+                onBookClick={(lead) => setBookingLeadTarget(lead)}
+                onAction={handleLeadAction}
+                onRowClick={(id) => navigate('/leads/' + id)}
+              />
+            </div>
+          </>
+        )}
+
+        {activeTab === 'team' && (
+          <>
 
         {/* Summary KPI Strip */}
         <div
@@ -643,6 +821,32 @@ export default function AdminDashboard() {
             )}
           </div>
         </div>
+          </>
+        )}
+
+        {bookingLeadTarget && (
+          <CreateBookingModal
+            lead={bookingLeadTarget}
+            onClose={() => setBookingLeadTarget(null)}
+            onSuccess={fetchLeads}
+          />
+        )}
+
+        {assignEngineerTarget && (
+          <AssignEngineerModal
+            booking={assignEngineerTarget}
+            onClose={() => setAssignEngineerTarget(null)}
+            onSuccess={fetchLeads}
+          />
+        )}
+
+        {rescheduleTarget && (
+          <RescheduleBookingModal
+            booking={rescheduleTarget}
+            onClose={() => setRescheduleTarget(null)}
+            onSuccess={fetchLeads}
+          />
+        )}
 
         {showAddModal && (
           <AddUserModal
