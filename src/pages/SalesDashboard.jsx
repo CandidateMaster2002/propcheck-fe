@@ -100,6 +100,11 @@ export default function SalesDashboard() {
 
   const handleLeadAction = async (action, lead) => {
     const bookingId = lead.currentBookingId || lead.id;
+
+    if (action === 'VIEW_REPORT') {
+      navigate(`/reports/${bookingId}`, { state: { booking: lead } });
+      return;
+    }
     
     // Open Modals for complex actions
     if (action === 'RESCHEDULE') {
@@ -155,9 +160,6 @@ export default function SalesDashboard() {
           <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
             {(role === 'ADMIN' || role === 'SUPER_ADMIN') && (
               <button className="btn btn-secondary" onClick={() => navigate('/admin')}>🛡️ Admin Portal</button>
-            )}
-            {canValidate && (
-              <button className="btn btn-primary" onClick={() => navigate('/validator')}>🔍 Validation Queue</button>
             )}
             <button className="btn btn-secondary" onClick={() => navigate('/schedule')}>🗓️ Schedule</button>
             <button className="btn btn-secondary" onClick={() => navigate('/profile')}>Profile</button>

@@ -344,6 +344,11 @@ export default function AdminDashboard() {
   const handleLeadAction = async (action, lead) => {
     const bookingId = lead.currentBookingId || lead.id;
 
+    if (action === 'VIEW_REPORT') {
+      navigate(`/reports/${bookingId}`, { state: { booking: lead } });
+      return;
+    }
+
     if (action === 'RESCHEDULE') {
       setRescheduleTarget({
         ...lead,
@@ -457,7 +462,6 @@ export default function AdminDashboard() {
             </p>
           </div>
           <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
-            <button className="btn btn-primary" onClick={() => navigate('/validator')}>🔍 Validation Queue</button>
             <button className="btn btn-secondary" onClick={() => navigate('/schedule')}>🗓️ Schedule</button>
             <button className="btn btn-secondary" onClick={() => navigate('/profile')}>Profile</button>
             <button

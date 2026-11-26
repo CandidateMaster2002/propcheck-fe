@@ -65,7 +65,8 @@ const COLUMNS = [
 ];
 
 export default function LeadsTable({ leads, users = [], loading, emptyMessage, onRowClick, onBookClick, onAction }) {
-  const { role } = useAuth();
+  const { role, canValidate } = useAuth();
+  const canDoValidation = Boolean(canValidate || role === 'ADMIN' || role === 'SUPER_ADMIN' || role === 'CITY_HEAD' || role === 'VALIDATOR');
   // Initialize with default visible columns
   const [visibleColumns, setVisibleColumns] = useState(() => 
     COLUMNS.filter(c => c.defaultVisible).map(c => c.key)
@@ -246,14 +247,6 @@ export default function LeadsTable({ leads, users = [], loading, emptyMessage, o
                       {(() => {
                         const status = lead.currentBookingStatus || 'NOT_SCHEDULED';
                         
-                        if (status === 'REPORT_SENT') {
-                          return (
-                            <select disabled style={{ padding: '0.25rem', borderRadius: '0.25rem', border: '1px solid #d1d5db', background: '#f3f4f6', color: '#9ca3af', cursor: 'not-allowed', appearance: 'none', textAlign: 'center' }} title="Report Sent - Completed">
-                              <option>🔒</option>
-                            </select>
-                          );
-                        }
-
                         if (lead.paymentStatus === 'Refunded') {
                           return (
                             <select disabled style={{ padding: '0.25rem', borderRadius: '0.25rem', border: '1px solid #d1d5db', background: '#f3f4f6', color: '#6b7280', cursor: 'not-allowed', appearance: 'none', textAlign: 'center' }} title="Booking not allowed: Lead is refunded">
@@ -326,14 +319,21 @@ export default function LeadsTable({ leads, users = [], loading, emptyMessage, o
                                 {role !== 'SALES' && <option value="CANCEL" style={{ color: '#991b1b' }}>Postpone / Cancel</option>}
                               </>
                             )}
-                            {status === 'INSPECTION_DONE' && role !== 'SALES' && (
+                            {status === 'INSPECTION_DONE' && (
                               <>
-                                <option value="MARK_VALIDATION_DONE" style={{ color: '#111827' }}>Mark Validation Done</option>
-                                <option value="REPORT_SENT" style={{ color: '#111827' }}>Report Sent</option>
+                                <option value="VIEW_REPORT" style={{ color: '#111827' }}>🔍 Review Report & Snags</option>
+                                {canDoValidation && <option value="MARK_VALIDATION_DONE" style={{ color: '#111827' }}>Mark Validation Done</option>}
+                                {role !== 'SALES' && <option value="REPORT_SENT" style={{ color: '#111827' }}>Report Sent</option>}
                               </>
                             )}
-                            {status === 'VALIDATION_DONE' && role !== 'SALES' && (
-                              <option value="REPORT_SENT" style={{ color: '#111827' }}>Report Sent</option>
+                            {status === 'VALIDATION_DONE' && (
+                              <>
+                                <option value="VIEW_REPORT" style={{ color: '#111827' }}>🔍 View Report & Snags</option>
+                                {role !== 'SALES' && <option value="REPORT_SENT" style={{ color: '#111827' }}>Report Sent</option>}
+                              </>
+                            )}
+                            {status === 'REPORT_SENT' && (
+                              <option value="VIEW_REPORT" style={{ color: '#111827' }}>🔍 View Report & Snags</option>
                             )}
                           </select>
                         );
