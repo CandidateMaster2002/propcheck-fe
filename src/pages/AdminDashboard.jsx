@@ -702,21 +702,20 @@ export default function AdminDashboard() {
             </div>
           </div>
 
-          <div className="table-container">
+          <div className="table-container" style={{ overflowX: 'auto' }}>
             {filteredUsers.length === 0 && !tableLoading ? (
-              <div style={{ padding: '2.5rem', textAlign: 'center', color: 'var(--text-muted)' }}>
+              <div style={{ padding: '2rem', textAlign: 'center', color: 'var(--text-muted)' }}>
                 No matching users found.
               </div>
             ) : (
-              <table>
+              <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.875rem' }}>
                 <thead>
                   <tr>
-                    <th>User</th>
-                    <th>Email</th>
-                    <th>Role</th>
-                    <th>City</th>
-                    <th>Validation Power</th>
-                    <th>Actions</th>
+                    <th style={{ padding: '0.6rem 0.75rem' }}>User</th>
+                    <th style={{ padding: '0.6rem 0.75rem' }}>Role</th>
+                    <th style={{ padding: '0.6rem 0.75rem' }}>City</th>
+                    <th style={{ padding: '0.6rem 0.75rem' }}>Validation</th>
+                    <th style={{ padding: '0.6rem 0.75rem', textAlign: 'right' }}>Actions</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -731,17 +730,17 @@ export default function AdminDashboard() {
 
                     return (
                       <tr key={user.id}>
-                        <td>
-                          <div style={{ display: 'flex', alignItems: 'center', gap: '0.65rem' }}>
+                        <td style={{ padding: '0.6rem 0.75rem' }}>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem' }}>
                             <div
                               style={{
-                                width: '32px',
-                                height: '32px',
+                                width: '30px',
+                                height: '30px',
                                 borderRadius: '50%',
                                 background: roleMeta.bg,
                                 color: roleMeta.color,
                                 fontWeight: 700,
-                                fontSize: '0.75rem',
+                                fontSize: '0.72rem',
                                 display: 'flex',
                                 alignItems: 'center',
                                 justifyContent: 'center',
@@ -750,11 +749,13 @@ export default function AdminDashboard() {
                             >
                               {initials}
                             </div>
-                            <span style={{ fontWeight: 600 }}>{user.name}</span>
+                            <div style={{ minWidth: 0 }}>
+                              <div style={{ fontWeight: 600, color: '#0f172a', lineHeight: 1.25 }}>{user.name}</div>
+                              <div style={{ fontSize: '0.78rem', color: 'var(--text-muted)', lineHeight: 1.25 }}>{user.email}</div>
+                            </div>
                           </div>
                         </td>
-                        <td style={{ color: 'var(--text-muted)' }}>{user.email}</td>
-                        <td>
+                        <td style={{ padding: '0.6rem 0.75rem', whiteSpace: 'nowrap' }}>
                           <span
                             className="badge"
                             style={{ background: roleMeta.bg, color: roleMeta.color, fontWeight: 600 }}
@@ -762,8 +763,8 @@ export default function AdminDashboard() {
                             {roleMeta.label}
                           </span>
                         </td>
-                        <td>{user.city || '—'}</td>
-                        <td>
+                        <td style={{ padding: '0.6rem 0.75rem', whiteSpace: 'nowrap' }}>{user.city || '—'}</td>
+                        <td style={{ padding: '0.6rem 0.75rem', whiteSpace: 'nowrap' }}>
                           {user.role === 'ADMIN' || user.role === 'SUPER_ADMIN' ? (
                             <span className="badge" style={{ background: '#dcfce7', color: '#166534' }}>
                               Full Access
@@ -773,28 +774,28 @@ export default function AdminDashboard() {
                               className="btn btn-secondary"
                               onClick={() => handleToggleValidator(user)}
                               style={{
-                                padding: '0.25rem 0.65rem',
+                                padding: '0.25rem 0.6rem',
                                 fontSize: '0.75rem',
                                 background: user.canValidate ? '#dcfce7' : '#f8fafc',
                                 color: user.canValidate ? '#166534' : '#475569',
                                 borderColor: user.canValidate ? '#86efac' : '#cbd5e1',
                               }}
                             >
-                              {user.canValidate ? '✅ Validator' : '+ Grant Validation'}
+                              {user.canValidate ? '✅ Validator' : '+ Grant'}
                             </button>
                           )}
                         </td>
-                        <td>
+                        <td style={{ padding: '0.6rem 0.75rem', textAlign: 'right', whiteSpace: 'nowrap' }}>
                           {user.role === 'SUPER_ADMIN' ? (
                             <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>Protected</span>
                           ) : user.role === 'ADMIN' && !isSuperAdmin ? (
                             <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>Super Admin Only</span>
                           ) : (
-                            <>
+                            <div style={{ display: 'inline-flex', gap: '0.35rem' }}>
                               <button
                                 className="btn btn-secondary"
                                 onClick={() => setEditingUser(user)}
-                                style={{ padding: '0.25rem 0.6rem', fontSize: '0.75rem', marginRight: '0.4rem' }}
+                                style={{ padding: '0.25rem 0.55rem', fontSize: '0.75rem' }}
                               >
                                 Edit
                               </button>
@@ -802,7 +803,7 @@ export default function AdminDashboard() {
                                 className="btn btn-primary"
                                 onClick={() => handleDeleteUser(user.id)}
                                 style={{
-                                  padding: '0.25rem 0.6rem',
+                                  padding: '0.25rem 0.55rem',
                                   fontSize: '0.75rem',
                                   background: 'var(--error-color)',
                                   borderColor: 'var(--error-color)',
@@ -810,7 +811,7 @@ export default function AdminDashboard() {
                               >
                                 Delete
                               </button>
-                            </>
+                            </div>
                           )}
                         </td>
                       </tr>
