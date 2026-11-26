@@ -12,6 +12,9 @@ export default function InspectionReportPage() {
 
   const [booking, setBooking] = useState(location.state?.booking || null);
   const [loading, setLoading] = useState(!location.state?.booking);
+  const [b2cProperty, setB2cProperty] = useState(null);
+  const [b2cLoading, setB2cLoading] = useState(true);
+  const [b2cError, setB2cError] = useState('');
   const [error, setError] = useState('');
   const [successMsg, setSuccessMsg] = useState('');
 
@@ -46,6 +49,37 @@ export default function InspectionReportPage() {
       loadBooking();
     }
   }, [booking, loadBooking]);
+
+  useEffect(() => {
+    let active = true;
+    const fetchB2cReport = async () => {
+      setB2cLoading(true);
+      setB2cError('');
+      try {
+        const isLeadShape = Boolean(booking?.currentBookingId && !booking?.leadId);
+        const endpoint = isLeadShape
+          ? `/bookings/for-lead/${booking.id}/b2c-report`
+          : `/bookings/${bookingId}/b2c-report`;
+        const res = await client.get(endpoint);
+        if (!active) return;
+        if (res.data?.status && res.data?.data) {
+          setB2cProperty(res.data.data);
+        } else {
+          setB2cError(res.data?.message || 'No B2C inspection data found for this booking.');
+        }
+      } catch (err) {
+        if (!active) return;
+        setB2cError(err.response?.data?.message || 'Unable to sync B2C inspection data.');
+      } finally {
+        if (active) setB2cLoading(false);
+      }
+    };
+
+    fetchB2cReport();
+    return () => {
+      active = false;
+    };
+  }, [bookingId, booking?.id, booking?.leadId, booking?.currentBookingId]);
 
   const handleBack = () => {
     if (window.history.length > 1) {
@@ -158,7 +192,7 @@ export default function InspectionReportPage() {
           </div>
         )}
 
-        {loading ? (
+        {loading && !b2cProperty ? (
           <div
             className="card"
             style={{
@@ -172,11 +206,13 @@ export default function InspectionReportPage() {
           >
             Loading inspection report...
           </div>
-        ) : booking ? (
+        ) : (booking || b2cProperty) ? (
           <InspectionReportView
             booking={booking}
+            b2cProperty={b2cProperty}
+            b2cLoading={b2cLoading}
+            b2cError={b2cError}
             isValidator={isValidator}
-            onClose={handleBack}
             onValidate={handleValidate}
           />
         ) : null}
