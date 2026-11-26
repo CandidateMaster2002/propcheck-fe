@@ -6,6 +6,7 @@ export default function EditUserModal({ user, onClose, onSuccess }) {
   const [email, setEmail] = useState(user.email || '');
   const [city, setCity] = useState(user.city || '');
   const [password, setPassword] = useState('');
+  const [canValidate, setCanValidate] = useState(Boolean(user.canValidate));
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
 
@@ -14,7 +15,7 @@ export default function EditUserModal({ user, onClose, onSuccess }) {
     setLoading(true);
     setError('');
 
-    const payload = { name, email };
+    const payload = { name, email, canValidate };
     if (user.role === 'CITY_HEAD') payload.city = city;
     if (password) payload.password = password; // Only update if typed
 
@@ -53,6 +54,21 @@ export default function EditUserModal({ user, onClose, onSuccess }) {
             <label>New Password <small style={{ fontWeight: 'normal', color: 'var(--text-muted)' }}>(Leave blank to keep current)</small></label>
             <input type="password" value={password} onChange={e => setPassword(e.target.value)} placeholder="••••••••" />
           </div>
+
+          {user.role !== 'ADMIN' && (
+            <div className="form-group" style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+              <input
+                id="edit-can-validate"
+                type="checkbox"
+                checked={canValidate}
+                onChange={e => setCanValidate(e.target.checked)}
+                style={{ width: 'auto' }}
+              />
+              <label htmlFor="edit-can-validate" style={{ marginBottom: 0, cursor: 'pointer' }}>
+                Assign Validation Power (can review & approve reports)
+              </label>
+            </div>
+          )}
           
           {error && <div className="alert alert-error" style={{ marginBottom: '1rem' }}>{error}</div>}
           

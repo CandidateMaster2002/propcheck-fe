@@ -18,7 +18,8 @@ export const AuthProvider = ({ children }) => {
       name: null,
       email: null,
       role: null,
-      city: null
+      city: null,
+      canValidate: false
     };
   });
 
@@ -28,7 +29,8 @@ export const AuthProvider = ({ children }) => {
       name: userData.name ?? null,
       email: userData.email ?? null,
       role: userData.role ?? null,
-      city: userData.city ?? null
+      city: userData.city ?? null,
+      canValidate: Boolean(userData.canValidate || userData.role === 'ADMIN' || userData.role === 'VALIDATOR')
     };
     
     setAuthState(newUserState);
@@ -41,7 +43,8 @@ export const AuthProvider = ({ children }) => {
       name: null,
       email: null,
       role: null,
-      city: null
+      city: null,
+      canValidate: false
     });
     sessionStorage.removeItem('propcheck_user');
   };

@@ -10,7 +10,7 @@ import AssignEngineerModal from '../components/bookings/AssignEngineerModal';
 import RescheduleBookingModal from '../components/bookings/RescheduleBookingModal';
 
 export default function CityHeadDashboard() {
-  const { logout, name, city, id: userId } = useAuth();
+  const { logout, name, city, id: userId, canValidate } = useAuth();
   const navigate = useNavigate();
 
   const [leads, setLeads] = useState([]);
@@ -132,7 +132,10 @@ export default function CityHeadDashboard() {
               Welcome back, {name || 'City Lead'} | Managing: {city || 'Unassigned'}
             </p>
           </div>
-          <div style={{ display: 'flex', gap: '0.5rem' }}>
+          <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
+            {canValidate && (
+              <button className="btn btn-primary" onClick={() => navigate('/validator')}>🔍 Validation Queue</button>
+            )}
             <button className="btn btn-secondary" onClick={() => navigate('/schedule')}>🗓️ Schedule</button>
             <button className="btn btn-secondary" onClick={() => navigate('/analytics')}>📊 Analytics</button>
             <button className="btn btn-secondary" onClick={() => navigate('/profile')}>Profile</button>

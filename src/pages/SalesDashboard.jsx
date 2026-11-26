@@ -10,7 +10,7 @@ import AssignEngineerModal from '../components/bookings/AssignEngineerModal';
 import RescheduleBookingModal from '../components/bookings/RescheduleBookingModal';
 
 export default function SalesDashboard() {
-  const { logout, name, id: userId, city } = useAuth();
+  const { logout, name, id: userId, city, canValidate } = useAuth();
   const navigate = useNavigate();
 
   const [leads, setLeads] = useState([]);
@@ -146,7 +146,10 @@ export default function SalesDashboard() {
             <h1 style={{ marginBottom: 0 }}>Sales Dashboard</h1>
             <p style={{ color: 'var(--text-muted)' }}>Welcome back, {name || 'Sales User'}</p>
           </div>
-          <div style={{ display: 'flex', gap: '0.5rem' }}>
+          <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
+            {canValidate && (
+              <button className="btn btn-primary" onClick={() => navigate('/validator')}>🔍 Validation Queue</button>
+            )}
             <button className="btn btn-secondary" onClick={() => navigate('/schedule')}>🗓️ Schedule</button>
             <button className="btn btn-secondary" onClick={() => navigate('/analytics')}>📊 Analytics</button>
             <button className="btn btn-secondary" onClick={() => navigate('/profile')}>Profile</button>

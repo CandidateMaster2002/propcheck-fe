@@ -36,7 +36,7 @@ function App() {
         <ProtectedRoute allowedRole="CUSTOMER"><CustomerDashboard /></ProtectedRoute>
       } />
       <Route path="/validator" element={
-        <ProtectedRoute allowedRole="VALIDATOR"><ValidatorDashboard /></ProtectedRoute>
+        <ProtectedRoute requireValidator><ValidatorDashboard /></ProtectedRoute>
       } />
 
       <Route path="/profile" element={

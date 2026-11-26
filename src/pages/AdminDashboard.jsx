@@ -3,61 +3,11 @@ import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import client from '../api/client';
 
-function CreateValidatorForm({ onSuccess }) {
-  const [name, setName] = useState('');
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState('');
-
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    setLoading(true);
-    setError('');
-    try {
-      await client.post('/users/validator', { name, email, password });
-      setName('');
-      setEmail('');
-      setPassword('');
-      onSuccess();
-    } catch (err) {
-      setError(err.response?.data?.error || 'Failed to create validator.');
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  return (
-    <div className="card">
-      <h2>Create Validator</h2>
-      <form onSubmit={handleSubmit}>
-        <div className="form-group">
-          <label htmlFor="val-name">Name</label>
-          <input id="val-name" type="text" value={name} onChange={(e) => setName(e.target.value)} required placeholder="Validator Name" />
-        </div>
-        <div className="form-group">
-          <label htmlFor="val-email">Email</label>
-          <input id="val-email" type="email" value={email} onChange={(e) => setEmail(e.target.value)} required placeholder="validator@example.com" />
-        </div>
-        <div className="form-group">
-          <label htmlFor="val-password">Password</label>
-          <input id="val-password" type="password" value={password} onChange={(e) => setPassword(e.target.value)} required placeholder="••••••••" />
-        </div>
-        {error && (
-          <div className="alert alert-error" role="alert">{error}</div>
-        )}
-        <button type="submit" className="btn btn-primary" disabled={loading}>
-          {loading ? 'Creating...' : 'Create Validator'}
-        </button>
-      </form>
-    </div>
-  );
-}
-
 function CreateSalesForm({ onSuccess }) {
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [canValidate, setCanValidate] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
 
@@ -66,10 +16,11 @@ function CreateSalesForm({ onSuccess }) {
     setLoading(true);
     setError('');
     try {
-      await client.post('/users/sales', { name, email, password });
+      await client.post('/users/sales', { name, email, password, canValidate });
       setName('');
       setEmail('');
       setPassword('');
+      setCanValidate(false);
       onSuccess();
     } catch (err) {
       setError(err.response?.data?.error || 'Failed to create sales person.');
@@ -115,6 +66,18 @@ function CreateSalesForm({ onSuccess }) {
             placeholder="••••••••"
           />
         </div>
+        <div className="form-group" style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+          <input
+            id="sales-can-validate"
+            type="checkbox"
+            checked={canValidate}
+            onChange={(e) => setCanValidate(e.target.checked)}
+            style={{ width: 'auto' }}
+          />
+          <label htmlFor="sales-can-validate" style={{ marginBottom: 0, cursor: 'pointer' }}>
+            Assign Validation Power
+          </label>
+        </div>
         {error && (
           <div className="alert alert-error" role="alert">
             {error}
@@ -133,6 +96,7 @@ function CreateCityHeadForm({ onSuccess }) {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [city, setCity] = useState('');
+  const [canValidate, setCanValidate] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
 
@@ -141,11 +105,12 @@ function CreateCityHeadForm({ onSuccess }) {
     setLoading(true);
     setError('');
     try {
-      await client.post('/users/cityhead', { name, email, password, city });
+      await client.post('/users/cityhead', { name, email, password, city, canValidate });
       setName('');
       setEmail('');
       setPassword('');
       setCity('');
+      setCanValidate(false);
       onSuccess();
     } catch (err) {
       setError(err.response?.data?.error || 'Failed to create city lead.');
@@ -202,6 +167,30 @@ function CreateCityHeadForm({ onSuccess }) {
             placeholder="New York"
           />
         </div>
+        <div className="form-group" style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+          <input
+            id="sales-can-validate"
+            type="checkbox"
+            checked={canValidate}
+            onChange={(e) => setCanValidate(e.target.checked)}
+            style={{ width: 'auto' }}
+          />
+          <label htmlFor="sales-can-validate" style={{ marginBottom: 0, cursor: 'pointer' }}>
+            Assign Validation Power
+          </label>
+        </div>
+        <div className="form-group" style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+          <input
+            id="ch-can-validate"
+            type="checkbox"
+            checked={canValidate}
+            onChange={(e) => setCanValidate(e.target.checked)}
+            style={{ width: 'auto' }}
+          />
+          <label htmlFor="ch-can-validate" style={{ marginBottom: 0, cursor: 'pointer' }}>
+            Assign Validation Power
+          </label>
+        </div>
         {error && (
           <div className="alert alert-error" role="alert">
             {error}
@@ -215,7 +204,7 @@ function CreateCityHeadForm({ onSuccess }) {
   );
 }
 
-function UsersTable({ users, onRefresh, loading, onEdit, onDelete }) {
+function UsersTable({ users, onRefresh, loading, onEdit, onDelete, onToggleValidator }) {
   return (
     <div className="card">
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
@@ -238,6 +227,7 @@ function UsersTable({ users, onRefresh, loading, onEdit, onDelete }) {
                 <th>Email</th>
                 <th>Role</th>
                 <th>City</th>
+                <th>Validation Power</th>
                 <th>Actions</th>
               </tr>
             </thead>
@@ -252,6 +242,25 @@ function UsersTable({ users, onRefresh, loading, onEdit, onDelete }) {
                     </span>
                   </td>
                   <td>{user.city ?? '-'}</td>
+                  <td>
+                    {user.role === 'ADMIN' ? (
+                      <span className="badge" style={{ background: '#dcfce7', color: '#166534' }}>Full Access</span>
+                    ) : (
+                      <button
+                        className="btn btn-secondary"
+                        onClick={() => onToggleValidator(user)}
+                        style={{
+                          padding: '0.2rem 0.6rem',
+                          fontSize: '0.75rem',
+                          background: user.canValidate ? '#dcfce7' : '#f3f4f6',
+                          color: user.canValidate ? '#166534' : '#374151',
+                          borderColor: user.canValidate ? '#86efac' : '#d1d5db',
+                        }}
+                      >
+                        {user.canValidate ? '✅ Validator' : 'Grant Validation'}
+                      </button>
+                    )}
+                  </td>
                   <td>
                     <button 
                       className="btn btn-secondary" 
@@ -320,6 +329,15 @@ export default function AdminDashboard() {
     }
   };
 
+  const handleToggleValidator = async (user) => {
+    try {
+      await client.put(`/users/${user.id}`, { canValidate: !user.canValidate });
+      fetchUsers();
+    } catch (err) {
+      alert(err.response?.data?.error || 'Failed to update validation permission.');
+    }
+  };
+
   return (
     <div className="app-container">
       <div className="dashboard-container">
@@ -328,7 +346,8 @@ export default function AdminDashboard() {
             <h1 style={{ marginBottom: 0 }}>Admin Dashboard</h1>
             <p style={{ color: 'var(--text-muted)' }}>Manage users and roles</p>
           </div>
-          <div style={{ display: 'flex', gap: '0.5rem' }}>
+          <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
+            <button className="btn btn-primary" onClick={() => navigate('/validator')}>🔍 Validation Queue</button>
             <button className="btn btn-secondary" onClick={() => navigate('/schedule')}>🗓️ Schedule</button>
             <button className="btn btn-secondary" onClick={() => navigate('/analytics')}>📊 Analytics</button>
             <button className="btn btn-secondary" onClick={() => navigate('/profile')}>Profile</button>
@@ -339,7 +358,6 @@ export default function AdminDashboard() {
         <div className="dashboard-grid">
           <CreateSalesForm onSuccess={fetchUsers} />
           <CreateCityHeadForm onSuccess={fetchUsers} />
-          <CreateValidatorForm onSuccess={fetchUsers} />
         </div>
 
         <UsersTable 
@@ -348,6 +366,7 @@ export default function AdminDashboard() {
           loading={tableLoading} 
           onEdit={(u) => setEditingUser(u)}
           onDelete={handleDeleteUser}
+          onToggleValidator={handleToggleValidator}
         />
         
         {editingUser && (

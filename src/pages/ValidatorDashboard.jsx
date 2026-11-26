@@ -34,7 +34,7 @@ function StatusBadge({ status }) {
 }
 
 export default function ValidatorDashboard() {
-  const { logout, name } = useAuth();
+  const { logout, name, role } = useAuth();
   const navigate = useNavigate();
 
   const [bookings, setBookings] = useState([]);
@@ -113,6 +113,18 @@ export default function ValidatorDashboard() {
           <span style={{ fontWeight: 700, fontSize: 18 }}>PropCheck · Quality Validator Portal</span>
         </div>
         <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
+          {role && role !== 'VALIDATOR' && (
+            <button
+              onClick={() => navigate(role === 'ADMIN' ? '/admin' : role === 'CITY_HEAD' ? '/cityhead' : '/sales')}
+              style={{
+                background: 'rgba(255,255,255,0.2)', border: 'none',
+                color: '#fff', borderRadius: 6, padding: '6px 14px',
+                cursor: 'pointer', fontSize: 13, fontWeight: 600,
+              }}
+            >
+              ← Back to Dashboard
+            </button>
+          )}
           <span style={{ fontSize: 14 }}>👤 {name || 'Validator'}</span>
           <button
             onClick={logout}
