@@ -42,8 +42,8 @@ function AddUserModal({ isSuperAdmin, onClose, onSuccess }) {
 
   const userTypeOptions = [
     { value: 'SALES', title: 'Sales Person', desc: 'Leads & bookings', icon: '💼' },
-    { value: 'CITY_HEAD', title: 'City Lead', desc: 'City ops & inspectors', icon: '🏙️' },
-    ...(isSuperAdmin ? [{ value: 'ADMIN', title: 'Admin', desc: 'All ops except Admin CRUD', icon: '🛡️' }] : []),
+    { value: 'CITY_HEAD', title: 'City Lead', desc: 'City ops & team', icon: '🏙️' },
+    ...(isSuperAdmin ? [{ value: 'ADMIN', title: 'Admin', desc: 'All ops access', icon: '🛡️' }] : []),
   ];
 
   return (
@@ -66,11 +66,12 @@ function AddUserModal({ isSuperAdmin, onClose, onSuccess }) {
         onClick={(e) => e.stopPropagation()}
         style={{
           width: '100%',
-          maxWidth: '460px',
+          maxWidth: '500px',
           margin: 0,
           position: 'relative',
           borderRadius: '1rem',
           boxShadow: '0 20px 45px rgba(15, 23, 42, 0.2)',
+          overflow: 'hidden',
         }}
       >
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.25rem' }}>
@@ -112,18 +113,25 @@ function AddUserModal({ isSuperAdmin, onClose, onSuccess }) {
                     type="button"
                     onClick={() => setUserType(opt.value)}
                     style={{
+                      display: 'flex',
+                      flexDirection: 'column',
+                      alignItems: 'flex-start',
+                      justifyContent: 'flex-start',
+                      gap: '0.2rem',
+                      width: '100%',
                       textAlign: 'left',
-                      padding: '0.75rem',
+                      padding: '0.8rem',
                       borderRadius: '0.65rem',
                       border: `2px solid ${active ? 'var(--primary-color)' : '#e2e8f0'}`,
                       background: active ? '#eef2ff' : '#ffffff',
                       cursor: 'pointer',
                       transition: 'all 0.15s ease',
+                      boxSizing: 'border-box',
                     }}
                   >
-                    <div style={{ fontSize: '1.1rem', marginBottom: '0.2rem' }}>{opt.icon}</div>
-                    <div style={{ fontWeight: 600, fontSize: '0.9rem', color: '#0f172a' }}>{opt.title}</div>
-                    <div style={{ fontSize: '0.75rem', color: '#64748b' }}>{opt.desc}</div>
+                    <div style={{ fontSize: '1.2rem', lineHeight: 1 }}>{opt.icon}</div>
+                    <div style={{ fontWeight: 600, fontSize: '0.875rem', color: '#0f172a', marginTop: '0.2rem' }}>{opt.title}</div>
+                    <div style={{ fontSize: '0.72rem', color: '#64748b', lineHeight: 1.3 }}>{opt.desc}</div>
                   </button>
                 );
               })}
